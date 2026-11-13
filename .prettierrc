@@ -12,13 +12,13 @@
       }
     },
     {
-      "files": ["*.ts","*.js", "*.cjs", "*.mjs"],
+      "files": ["*.ts", "*.js", "*.cjs", "*.mjs"],
       "options": {
         "tabWidth": 4
       }
     },
     {
-      "files": [".github/workflows/*"],
+      "files": [".github/workflows/*", ".github/ISSUE_TEMPLATE/*"],
       "options": {
         "singleQuote": false
       }

@@ -7,7 +7,5 @@
       "siyuan/types": ["./node_modules/siyuan/types"]
     }
   },
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": ["src/**/*.ts"]
 }
