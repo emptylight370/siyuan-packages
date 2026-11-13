@@ -1,0 +1,11 @@
+monorepo_root = true
+
+[monorepo]
+config_roots = []
+
+[tools]
+git-cliff = "latest"
+lefthook = "latest"
+node = "26"
+pnpm = "latest"
+prettier = "latest"
