@@ -2,6 +2,8 @@
   "tabWidth": 2,
   "printWidth": 120,
   "bracketSameLine": true,
+  "singleQuote": true,
+  "endOfLine": "auto",
   "overrides": [
     {
       "files": ["*.scss", "*.css"],
@@ -13,6 +15,12 @@
       "files": ["*.ts","*.js", "*.cjs", "*.mjs"],
       "options": {
         "tabWidth": 4
+      }
+    },
+    {
+      "files": [".github/workflows/*"],
+      "options": {
+        "singleQuote": false
       }
     }
   ]

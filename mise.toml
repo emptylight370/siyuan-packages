@@ -1,7 +1,7 @@
 monorepo_root = true
 
 [monorepo]
-config_roots = []
+config_roots = ["packages/plugin/*"]
 
 [tools]
 git-cliff = "latest"
@@ -9,3 +9,10 @@ lefthook = "latest"
 node = "26"
 pnpm = "latest"
 prettier = "latest"
+
+[deps.pnpm]
+
+[deps.lefthook]
+description = "Install lefthook hooks"
+run = "lefthook install"
+sources = ["lefthook.yml"]

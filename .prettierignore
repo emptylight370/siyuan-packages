@@ -1,0 +1,4 @@
+mise.lock
+mise.*.lock
+.mise/locks*/
+pnpm-lock.yaml

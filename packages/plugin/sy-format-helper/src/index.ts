@@ -315,12 +315,15 @@ export default class FormatHelper extends Plugin {
             showMessage(this.i18n.idWrong, undefined, 'error');
             return;
         }
+        let newDom: { dom: string; id: string } | null;
+        /* eslint-disable no-useless-assignment -- 代码块操作暂时抑制，结果在下方被丢弃 */
         if (type == 'indent') {
-            var newDom = this.codeBlockDecline(dom);
+            newDom = this.codeBlockDecline(dom);
             newDom = this.codeBlockRise(newDom);
         } else if (type == 'rindent') {
-            var newDom = this.codeBlockDecline(dom);
+            newDom = this.codeBlockDecline(dom);
         }
+        /* eslint-enable no-useless-assignment */
         // 暂时抑制代码块操作
         newDom = null;
         if (newDom == null || newDom == undefined || newDom === dom) {
@@ -350,6 +353,7 @@ export default class FormatHelper extends Plugin {
         const doc = parser.parseFromString(dom.dom, 'text/html');
         const hljs = doc.querySelector('div.hljs');
         const editable = hljs.querySelector('[contenteditable=true]');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 缩进逻辑待实现
         const innerHTML = editable.innerHTML;
         return dom;
     }

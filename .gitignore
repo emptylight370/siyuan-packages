@@ -1,0 +1,20 @@
+# Ecosystem
+node_modules/
+dist/
+package.zip
+*.tsbuildinfo
+.eslintcache
+.env
+
+# mise
+mise.local.toml
+mise.local.lock
+.mise/locks-local/
+
+# lefthook
+lefthook-local.yml
+.lefthook-local/
+
+# build package
+index.js
+index.css
