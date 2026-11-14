@@ -1,0 +1,19 @@
+{
+  "owner": "emptylight370",
+  "types": {
+    "plugin": {
+      "author": "Emptylight",
+      "backends": ["all"],
+      "disabledInPublish": false,
+      "icon": "icon.png",
+      "preview": "preview.png",
+      "readme": {
+        "default": "README.md",
+        "zh-CN": "README.zh-CN.md"
+      },
+      "funding": {
+        "custom": ["https://blog.emptylight.cn/sponsor"]
+      }
+    }
+  }
+}

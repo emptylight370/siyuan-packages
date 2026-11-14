@@ -1,0 +1,15 @@
+{
+  "version": "0.7.1",
+  "minAppVersion": "3.7.0",
+  "disabledInPublish": true,
+  "frontends": ["desktop", "browser-desktop", "desktop-window"],
+  "displayName": {
+    "default": "Format Helper",
+    "zh-CN": "格式助手"
+  },
+  "description": {
+    "default": "Format the text block",
+    "zh-CN": "格式化文本块"
+  },
+  "keywords": []
+}

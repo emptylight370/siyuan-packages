@@ -6,10 +6,12 @@
 # See https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
+    {% set current = version | split(pat="@") | last %}\
     {% if previous.version %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        {% set previousVersion = previous.version | split(pat="@") | last %}\
+        ## [{{ current }}](<REPO>/compare/{{ previousVersion }}...{{ current }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% else %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        ## [{{ current }}](<REPO>/compare/{{ commit_range.from }}...{{ current }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% endif %}\
 {% else %}\
     ## [unreleased]
@@ -43,6 +45,10 @@ postprocessors = [
 output = "whatschange.md"
 
 [git]
+# 只使用本包的 tag 作为版本锚点（版本号在模板中剥离包名前缀）
+tag_pattern = "^sy-format-helper@"
+# 只统计本包目录下的提交，避免其他包的提交混入（键名为复数，值为 glob 数组）
+include_paths = ["packages/plugin/sy-format-helper/**"]
 # Parse commits according to the conventional commits specification.
 # See https://www.conventionalcommits.org
 conventional_commits = true

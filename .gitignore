@@ -18,3 +18,5 @@ lefthook-local.yml
 # build package
 index.js
 index.css
+packages/plugin/*/i18n/
+packages/plugin/*/plugin.json

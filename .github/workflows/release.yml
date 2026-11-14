@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*@*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "<package>@<version>"
+        required: true
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Parse tag
+        id: meta
+        run: node scripts/parse-tag.mjs "${{ inputs.tag || github.ref_name }}"
+
+      # 统一判定是否继续：meta.json 版本与 tag 不一致、或已存在同名 release 时跳过后续全部步骤
+      - name: Check whether to release
+        id: state
+        run: |
+          repo="${{ steps.meta.outputs.owner }}/${{ steps.meta.outputs.name }}"
+          version="${{ steps.meta.outputs.version }}"
+          if [ "${{ steps.meta.outputs.matched }}" != "true" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::跳过发布：${{ steps.meta.outputs.reason }}"
+            exit 0
+          fi
+          if output=$(gh release view "$version" -R "$repo" 2>&1); then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$repo $version 已发布，跳过"
+          elif echo "$output" | grep -qiE 'release not found|HTTP 404'; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::检查 $repo 的 release 失败: $output"
+            exit 1
+          fi
+
+      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        if: steps.state.outputs.skip != 'true'
+
+      - name: Install dependencies
+        if: steps.state.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        if: steps.state.outputs.skip != 'true'
+        env:
+          TAG_VERSION: ${{ steps.meta.outputs.version }}
+        run: pnpm --filter "${{ steps.meta.outputs.name }}" build
+
+      - name: Generate release notes
+        if: steps.state.outputs.skip != 'true'
+        run: |
+          git cliff \
+            --config "${{ steps.meta.outputs.dir }}/cliff.toml" \
+            --latest \
+            -o release.md
+          prettier -w release.md
+
+      - name: Get packaged version
+        if: steps.state.outputs.skip != 'true'
+        id: packaged
+        uses: emptylight370/jq-action@v1
+        with:
+          data: ${{ steps.meta.outputs.dir }}/dist/plugin.json
+          filter: .version
+
+      - name: Verify packaged version
+        if: steps.state.outputs.skip != 'true'
+        run: |
+          if [ "${{ steps.packaged.outputs.result }}" != "${{ steps.meta.outputs.version }}" ]; then
+            echo "::error::包内版本 (${{ steps.packaged.outputs.result }}) 与 tag (${{ steps.meta.outputs.version }}) 不一致"
+            exit 1
+          fi
+
+      - name: Check release token
+        if: steps.state.outputs.skip != 'true'
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error::未配置 secrets.RELEASE_TOKEN，跨仓库发布需要具备目标仓库 contents: write 的 PAT 或 GitHub App token"
+            exit 1
+          fi
+
+      - name: Release
+        if: steps.state.outputs.skip != 'true'
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          # 跨仓库发布：repository 为 owner/repo，token 必须是能写目标仓库的 PAT
+          repository: ${{ steps.meta.outputs.owner }}/${{ steps.meta.outputs.name }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+          tag_name: ${{ steps.packaged.outputs.result }}
+          # 仅在目标仓库还没有该 tag 时用于创建 tag
+          target_commitish: main
+          name: ${{ steps.meta.outputs.name }} ${{ steps.packaged.outputs.result }}
+          files: |
+            ${{ steps.meta.outputs.dir }}/package.zip
+          fail_on_unmatched_files: true
+          body_path: release.md
+          make_latest: true
