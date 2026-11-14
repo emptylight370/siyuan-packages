@@ -15,16 +15,16 @@ const { version } = PluginInfo;
 
 export default class PluginVSCE extends Plugin {
     // Run as mobile
-    public isMobile: boolean;
+    public isMobile!: boolean;
     // Run in browser
-    public isBrowser: boolean;
+    public isBrowser!: boolean;
     // Run as local
-    public isLocal: boolean;
+    public isLocal!: boolean;
     // Run in Electron
-    public isElectron: boolean;
+    public isElectron!: boolean;
     // Run in window
-    public isInWindow: boolean;
-    public platform: SyFrontendTypes;
+    public isInWindow!: boolean;
+    public platform!: SyFrontendTypes;
     public readonly version = version;
 
     async onload() {

@@ -49,6 +49,7 @@ export default class FormatHelper extends Plugin {
                 click: async () => {
                     showMessage(this.i18n.codeBlockOnlyFirst);
                     const blockId = blockElements[0].getAttribute('data-node-id');
+                    if (!blockId) return;
                     await this.handleCodeBlock(blockId, 'indent');
                 },
             });
@@ -58,6 +59,7 @@ export default class FormatHelper extends Plugin {
                 click: async () => {
                     showMessage(this.i18n.codeBlockOnlyFirst);
                     const blockId = blockElements[0].getAttribute('data-node-id');
+                    if (!blockId) return;
                     await this.handleCodeBlock(blockId, 'rindent');
                 },
             });
@@ -325,7 +327,7 @@ export default class FormatHelper extends Plugin {
         }
         /* eslint-enable no-useless-assignment */
         // 暂时抑制代码块操作
-        newDom = null;
+        newDom = null as { dom: string; id: string } | null;
         if (newDom == null || newDom == undefined || newDom === dom) {
             showMessage(this.i18n.nothingChange);
         } else {
@@ -339,7 +341,9 @@ export default class FormatHelper extends Plugin {
         const parser = new DOMParser();
         const doc = parser.parseFromString(dom.dom, 'text/html');
         const hljs = doc.querySelector('div.hljs');
+        if (!hljs) return dom;
         const editable = hljs.querySelector('[contenteditable=true]');
+        if (!editable) return dom;
         const innerHTML = editable.innerHTML.replace(/^[ \t]+/gm, '');
         editable.innerHTML = innerHTML;
         dom.dom = doc.body.innerHTML;
@@ -352,7 +356,9 @@ export default class FormatHelper extends Plugin {
         const parser = new DOMParser();
         const doc = parser.parseFromString(dom.dom, 'text/html');
         const hljs = doc.querySelector('div.hljs');
+        if (!hljs) return dom;
         const editable = hljs.querySelector('[contenteditable=true]');
+        if (!editable) return dom;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 缩进逻辑待实现
         const innerHTML = editable.innerHTML;
         return dom;

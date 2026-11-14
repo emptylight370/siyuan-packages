@@ -137,7 +137,8 @@ async function main() {
         outfile: path.join(outDir, 'index.js'),
         bundle: true,
         format: 'cjs',
-        target: 'es6',
+        // 思源桌面端用 latest-2 的 Electron，移动端 webview 最低 Chrome 95，产物语法按此目标保留
+        target: 'chrome95',
         platform: 'browser',
         external: ['siyuan'],
         minify: isProd,
