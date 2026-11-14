@@ -14,6 +14,8 @@ pnpm lint                         # eslint packages/plugin
 pnpm lint:fix                     # 同上并自动修复，带 .eslintcache
 pnpm format                       # prettier -w .（读根 .prettierrc 与 .prettierignore）
 pnpm -r clean                     # 删除各包 dist 与 package.zip
+mise run tag                      # 为各包创建本地发布 tag（已存在或版本未变则跳过）
+mise run deploy -- -package <pkg> # 构建单包并把 dist 部署到思源工作空间
 ```
 
 没有测试框架，也没有测试脚本；质量门禁是 `pnpm lint`、`prettier -c .` 与 `pnpm -r build` 三者。
@@ -100,6 +102,25 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 - 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`eslint.config.mjs`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
 - 包内 `.mise/tasks/` 会被 mise 识别为任务（无需包内 `mise.toml`），但必须用 `mise -C <pkgDir> run <task>` 调用，根目录下看不到子包任务。当前有 `changelog` 与 `release` 两个任务。
 
+### TypeScript 配置
+
+根 `tsconfig.base.json` 提供跨包共享的编译选项，各包用 `"extends": "../../../tsconfig.base.json"` 继承，包内只保留差异项（`paths`、`types`、`jsx`、`include` 等）：
+
+| 选项                                                                     | 值                                           | 依据                                                                                        |
+| ------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `target` / `lib`                                                         | `ES2022` / `ES2022` + `DOM` + `DOM.Iterable` | 思源桌面端用 latest-2 的 Electron，移动端 webview 最低 Chrome 95；`ES2022` 是安全上限       |
+| `module` / `moduleResolution`                                            | `ESNext` / `bundler`                         | 源码都由打包器处理（esbuild / vite），产物格式由构建脚本决定，与 tsconfig 无关              |
+| `strict`                                                                 | `true`                                       | 全包启用；涉及 class 属性、`catch` 变量、null 收窄，新增代码不得用包级 `strict: false` 降级 |
+| `isolatedModules`                                                        | `true`                                       | 与单文件转译一致，拦住只能靠类型信息完成的写法                                              |
+| `skipLibCheck` / `forceConsistentCasingInFileNames`                      | `true`                                       | 前者提速 IDE；后者防 Windows 本地通过、Linux CI 报错                                        |
+| `resolveJsonModule` / `esModuleInterop` / `allowSyntheticDefaultImports` | `true`                                       | 支持 `import meta from './meta.json'` 与 CJS 依赖的默认导入                                 |
+
+不进 base 的项：`paths`（各包别名不同）、`types`（vite 包需要 `vite/client`）、`jsx` / `allowJs` / `checkJs`（Vue 工程特有）、`noEmit`（`tsconfig.node.json` 的 `composite` 需要 emit）、`noUnusedLocals` / `noUnusedParameters`（严格度选项）。
+
+esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chrome95`，与 tsconfig 的 `target` 相互独立。
+
+类型检查**不在**质量门禁内（`pnpm lint` 只跑 eslint，不读 tsconfig），需要时手动执行 `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json`；含 `.vue` 的包需要 `vue-tsc` 才能覆盖 SFC 内部（当前靠 `*.vue` 声明文件绕过了那部分）。
+
 ### Git hooks
 
 根 `lefthook.yml` 只有 `pre-commit` 一个 job：对 `{staged_files}` 按 glob 过滤后执行 `prettier -w`，并带 `stage_fixed: true`（否则格式化结果不会进入本次提交）。glob 覆盖 `ts/tsx/mts/cts/js/jsx/mjs/cjs`、`scss/css/less`、`md`、`json/jsonc/json5`、`yaml/yml`。
@@ -114,6 +135,15 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `changelog` | 读 `meta.json` 版本 → `git cliff -t "<pkg>@<version>" -o whatschange.md` 全量重写 → 追加 `whatschange.old.md` 历史存档 → `prettier -w` → `git add`                                                            |
 | `release`   | 依次校验 `package.json` 与 `meta.json` 版本一致、工作区干净、当前在 `main`、本地与 `origin/main` 同步、本地/远端无同名 tag、`whatschange.md` 已含该版本段落，最后 `git tag -a "<pkg>@<version>" -m ''` 并推送 |
+
+根 `.mise/tasks/` 提供两个跨包任务：
+
+| 任务     | 用法                                                      | 作用                                                                                                                                                      |
+| -------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tag`    | `mise run tag`                                            | 扫描 `packages/*/*/meta.json`；tag 已存在、版本未变或 `meta.json` 有未提交改动时跳过，否则 `git tag -a "<pkg>@<version>" -m ''`，只建本地 tag，需手动推送 |
+| `deploy` | `mise run deploy -- -package <pkg> [-target <ws>] [-all]` | `pnpm --filter <pkg> build` 后把 `dist/*` 镜像同步到 `<workspace>/data/<类型目录>/<pkg>`                                                                  |
+
+`deploy` 的包类型映射：`plugin→plugins`、`theme→themes`、`widget→widgets`、`template→templates`、`icon→icons`，目标目录即 `data/<该目录>/<包名>`。`dist/` 顶层就是插件根（`index.js`、`plugin.json`、`i18n/`、README、图标），脚本用 `Copy-Item (Join-Path $distDir '*')` 复制目录内容而非目录本身，因此部署后不会再套一层 `dist`。部署前会先 `Remove-Item -Recurse` 清空目标目录，手改过的文件会被覆盖；`-all` 优先于 `-target`，省略 `-target` 时用当前打开的工作空间。脚本依赖 mise 注入的 `MISE_CONFIG_ROOT`，只能通过 `mise run deploy --` 调用。
 
 发布顺序：改 `meta.json` 的版本 → 提交（pre-commit 自动同步 `package.json` 并生成 changelog）→ 推送 `main` → `mise run tag` → 推送 tag 触发 CI。
 
@@ -130,7 +160,8 @@ pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格�
 3. `pnpm --filter <pkg> build`，`TAG_VERSION` 传入以在构建期再校验一次版本。
 4. `git cliff --config <pkg>/cliff.toml --latest -o release.md` 生成 release notes。
 5. `jq-action` 读取**产物** `dist/plugin.json` 的 `version`，与 tag 版本比对；最终 `tag_name` 取自产物而非 tag，保证与集市读到的版本同源。
-6. `softprops/action-gh-release` 通过 `repository: <owner>/<pkg>` + `token: secrets.RELEASE_TOKEN` 发布到独立仓库，`target_commitish: main`，`fail_on_unmatched_files: true`。
+6. `Sync metadata to target repo`：把 `dist/` 下的 `plugin.json`、`icon.png`、`preview.png` 提交并推送到目标仓库 `main`，使下一步以 `target_commitish: main` 创建的 tag 指向这份含元数据的提交（checkout tag 即可看到完整元数据与图标）。带 `continue-on-error: true`，失败只告警不影响发布；`git status --porcelain` 为空时跳过提交；提交身份取仓库变量 `vars.COMMIT_NAME` / `vars.COMMIT_EMAIL`。
+7. `softprops/action-gh-release` 通过 `repository: <owner>/<pkg>` + `token: secrets.RELEASE_TOKEN` 发布到独立仓库，`target_commitish: main`，`fail_on_unmatched_files: true`。
 
 子仓库的 tag 是**裸版本号**（`0.7.1`），不给 `v` 前缀也不带包名；monorepo 的 tag 才是 `<pkg>@<version>`。跨仓发布必须用 PAT 或 GitHub App token（`GITHUB_TOKEN` 只能作用于本仓库），且目标仓库必须已有 `main` 分支（stub 初始化）。
 
@@ -165,7 +196,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）并 `git rm --cached` 原文件；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 4. 按原包构建方式二选一：
    - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
-   - **vite 包**：保留包内 `vite.config.ts`，把 `import pluginInfo from './plugin.json'` 换成 `resolvePluginMeta({ pkgDir: __dirname })`，再注册一个 `generateBundle` 插件用 `emitFile` 输出 `plugin.json`；源码里 `@/../plugin.json` 的引用改为 `@/../meta.json`，watch 的监听列表改为 `./meta.json` 与 `../../../bazaar.json`
+   - **vite 包**：保留包内 `vite.config.ts`，把 `import pluginInfo from './plugin.json'` 换成 `resolvePluginMeta({ pkgDir: __dirname })`，再注册一个 `generateBundle` 插件用 `emitFile` 输出 `plugin.json`；源码里 `@/../plugin.json` 的引用改为 `@/../meta.json`，watch 的监听列表改为 `./meta.json` 与 `../../../bazaar.json`；包内 `tsconfig.json` 继承 `../../../tsconfig.base.json`，只保留 `paths`、`types`、`jsx`、`include` 等差异项
 5. 包内 `package.json` 只留构建依赖（esbuild 包：esbuild、sass、jszip、rimraf；vite 包：vite、@vitejs/plugin-vue、vite-plugin-static-copy、vite-plugin-zip-pack、vue、sass、rimraf 等）与 `siyuan`，脚本为 `dev` / `build` / `clean` / `lint`；`version` 由 pre-commit 的 `syncversion.ps1` 在提交时从 `meta.json` 自动对齐，不写 `main`、`keywords`、`author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段
 6. 新建包内 `cliff.toml`，只需改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）与 `postprocessors` 的 `<REPO>`（统一指向 monorepo，与包名无关），并把模板标题的 `trim_start_matches(pat="v")` 改成 `split(pat="@") | last`；从未发布过的包无需 `whatschange.old.md`，迁移包则把旧 `whatschange.md` 存为 `whatschange.old.md` 并迁移其中链接
 7. 提供包内 `.mise/tasks/changelog.ps1`（可直接复制现有包）；不需要该任务的包也必须建**空任务占位**，否则 pre-commit 会因 `mise run changelog` 找不到任务而失败
