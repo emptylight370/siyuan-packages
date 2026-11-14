@@ -18,7 +18,7 @@
       }
     },
     {
-      "files": ["*.yaml","*.yml"],
+      "files": ["*.yaml", "*.yml"],
       "options": {
         "singleQuote": false
       }

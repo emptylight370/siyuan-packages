@@ -1,3 +1,4 @@
+# pre-push：处理 lefthook 传入的 meta.json（{push_files} 经 glob 过滤），为其创建本地 tag
 # 只处理 main 分支，避免在特性分支上产出指向未合并提交的 tag
 $branch = git rev-parse --abbrev-ref HEAD
 if ($branch -ne 'main') {
@@ -5,17 +6,7 @@ if ($branch -ne 'main') {
     exit 0
 }
 
-# 待推送范围：优先用 upstream，缺失时回退到 origin/main
-$changed = git diff --name-only '@{push}..HEAD' 2>$null
-if ($LASTEXITCODE -ne 0) {
-    $changed = git diff --name-only 'origin/main..HEAD' 2>$null
-}
-if (-not $changed) { exit 0 }
-
-# 只关心各包的元数据文件
-$metas = $changed | Where-Object { $_ -match '^packages/[^/]+/[^/]+/meta\.json$' }
-
-foreach ($relative in $metas) {
+foreach ($relative in $args) {
     $metaPath = Join-Path (Get-Location).Path $relative
     if (-not (Test-Path $metaPath)) { continue }
 
@@ -24,11 +15,13 @@ foreach ($relative in $metas) {
     $version = (Get-Content $metaPath -Raw | ConvertFrom-Json).version
     $tag = "$pkgName@$version"
 
-    # 已有同名 tag 说明该版本打过；当前版本与上一个 tag 相同说明版本号未变
+    # 已有同名 tag 说明该版本打过
     if (git tag -l $tag) {
         Write-Host "${pkgName}: tag $tag 已存在，跳过"
         continue
     }
+
+    # 版本未变（与上一个本包 tag 相同）不打 tag
     $latest = git tag -l "$pkgName@*" --sort=-v:refname | Select-Object -First 1
     if ($latest -eq $tag) { continue }
 

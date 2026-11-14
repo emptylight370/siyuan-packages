@@ -9,6 +9,7 @@ pre-commit:
         - "*.md"
         - "*.json"
         - "*.{yaml,yml}"
+        - ".prettierrc"
       stage_fixed: true
 
     - name: Sync version to package.json
@@ -29,6 +30,8 @@ pre-push:
     - name: Create tag for packages
       script: createtag.ps1
       runner: "pwsh -File"
+      args: "{push_files}"
+      glob: "packages/*/*/meta.json"
 
 # EXAMPLE USAGE:
 #
