@@ -117,6 +117,10 @@ git push origin "sy-format-helper@0.7.1"
 
 发布顺序：改两处版本 → `run changelog` → 提交并推送 `main` → `run release`（推送 tag 触发 CI）。
 
+**每个包都必须有 `changelog` 任务**：根 `.lefthook/pre-commit/changelog.ps1` 通过 `mise -C <pkg> run changelog` 调用它，缺任务会让提交失败（`mise ERROR no task //packages/plugin/<pkg>:changelog found`）。不需要生成 changelog 的包（如纯资源包）必须创建一个**空任务占位**——`.mise/tasks/changelog.ps1` 内容可以只有一行注释，保证任务能被 mise 识别即可。
+
+pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格式化结果）和 `syncversion.ps1`（把 `meta.json` 的 version 写回 `package.json` 并单独 `git add`）。三者都会改动暂存区，若偶发 `index.lock` 冲突可把 `pre-commit.parallel` 改为 `false`。
+
 ### 发布流水线
 
 `.github/workflows/release.yml` 由 tag push（`*@*`）触发，也可 `workflow_dispatch` 手动补发：
@@ -157,7 +161,8 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 1. `git subtree add --prefix=packages/<type>/<pkg> <repo> main`
 2. 删除包内的 `mise.toml`、`mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/`、`.vscode/`、`.github/`、`build.mjs`
 3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）；**不要复制构建脚本**，包内 `package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
-4. 包内 `package.json` 只留构建依赖（esbuild、sass、jszip、rimraf）与 `siyuan`，脚本为 `dev` / `build` / `clean` / `lint`；`version` 与 `meta.json` 手动保持同步，不写 `main`、`keywords`、`author`、`description`、`devEngines` 等发布用字段
+4. 包内 `package.json` 只留构建依赖（esbuild、sass、jszip、rimraf）与 `siyuan`，脚本为 `dev` / `build` / `clean` / `lint`；`version` 由 pre-commit 的 `syncversion.ps1` 在提交时从 `meta.json` 自动对齐，不写 `main`、`keywords`、`author`、`description`、`devEngines` 等发布用字段
 5. 新建包内 `cliff.toml`，只需改 `tag_pattern` 与 `include_paths`（`postprocessors` 的 `<REPO>` 统一指向 monorepo，与包名无关）；同时把旧仓库的 `whatschange.md` 存为 `whatschange.old.md`，并把其中的仓库链接与 `compare` 参数迁移到 monorepo 形式
-6. 根 `pnpm install`，再跑 `pnpm -r build` 与 `pnpm lint`
-7. 在根 `.gitignore` 无需新增规则；在目标仓库初始化 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支
+6. 提供包内 `.mise/tasks/changelog.ps1`（可直接复制现有包）；不需要该任务的包也必须建**空任务占位**，否则 pre-commit 会因 `mise run changelog` 找不到任务而失败
+7. 根 `pnpm install`，再跑 `pnpm -r build` 与 `pnpm lint`
+8. 在根 `.gitignore` 无需新增规则；在目标仓库初始化 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支

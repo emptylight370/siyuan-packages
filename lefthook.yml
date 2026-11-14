@@ -4,12 +4,31 @@ pre-commit:
     - name: Format code with prettier
       run: prettier -w {staged_files}
       glob:
-        - '*.{ts,js,mjs,cjs}'
-        - '*.{scss,css}'
-        - '*.md'
-        - '*.json'
-        - '*.{yaml,yml}'
+        - "*.{ts,js,mjs,cjs}"
+        - "*.{scss,css}"
+        - "*.md"
+        - "*.json"
+        - "*.{yaml,yml}"
       stage_fixed: true
+
+    - name: Sync version to package.json
+      script: syncversion.ps1
+      runner: "pwsh -File"
+      args: "{staged_files}"
+      glob: "packages/*/*/meta.json"
+
+    - name: Generate changelog for packages
+      script: changelog.ps1
+      runner: "pwsh -File"
+      args: "{staged_files}"
+      glob: "packages/*/*/meta.json"
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: Create tag for packages
+      script: createtag.ps1
+      runner: "pwsh -File"
 
 # EXAMPLE USAGE:
 #
