@@ -53,14 +53,14 @@ cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 
 `-r` 的三个默认行为：排除根项目（否则根 `build` 脚本会自调用成死循环）、fail-fast（第一个包失败即停止，需要全部跑完则加 `--no-bail`）、跳过没有 `build` 脚本的包。因此包内 `scripts.build` 不能写成 `pnpm -r build`，必须直接调用构建脚本。CI 发布固定用 `pnpm --filter <pkg> build`，只构建目标包。
 
-发布靠 push tag 触发 CI，不要在本地手动建 release：
+发布靠 push tag 触发 CI，不要在本地手动建 release。tag 由根任务统一创建（扫描 `packages/*/*/meta.json`，tag 已存在或版本未变则跳过）：
 
 ```bash
-git tag -a "sy-format-helper@0.7.1" -m "release sy-format-helper 0.7.1"
-git push origin "sy-format-helper@0.7.1"
+mise run tag
+git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 ```
 
-仓库配置了 `tag.gpgSign = true`，必须用 `-a -m`；裸 `git tag <name>` 会打开编辑器并失败。
+仓库配置了 `tag.gpgSign = true`，任务内部用 `git tag -a <tag> -m ''` 创建空消息 annotated tag；不要用裸 `git tag <name>`，它会打开编辑器并失败。
 
 ## 架构
 
@@ -115,7 +115,7 @@ git push origin "sy-format-helper@0.7.1"
 | `changelog` | 读 `meta.json` 版本 → `git cliff -t "<pkg>@<version>" -o whatschange.md` 全量重写 → 追加 `whatschange.old.md` 历史存档 → `prettier -w` → `git add`                                                            |
 | `release`   | 依次校验 `package.json` 与 `meta.json` 版本一致、工作区干净、当前在 `main`、本地与 `origin/main` 同步、本地/远端无同名 tag、`whatschange.md` 已含该版本段落，最后 `git tag -a "<pkg>@<version>" -m ''` 并推送 |
 
-发布顺序：改两处版本 → `run changelog` → 提交并推送 `main` → `run release`（推送 tag 触发 CI）。
+发布顺序：改 `meta.json` 的版本 → 提交（pre-commit 自动同步 `package.json` 并生成 changelog）→ 推送 `main` → `mise run tag` → 推送 tag 触发 CI。
 
 **每个包都必须有 `changelog` 任务**：根 `.lefthook/pre-commit/changelog.ps1` 通过 `mise -C <pkg> run changelog` 调用它，缺任务会让提交失败（`mise ERROR no task //packages/plugin/<pkg>:changelog found`）。不需要生成 changelog 的包（如纯资源包）必须创建一个**空任务占位**——`.mise/tasks/changelog.ps1` 内容可以只有一行注释，保证任务能被 mise 识别即可。
 

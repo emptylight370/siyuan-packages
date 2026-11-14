@@ -113,7 +113,7 @@ jobs:
           tag_name: ${{ steps.packaged.outputs.result }}
           # 仅在目标仓库还没有该 tag 时用于创建 tag
           target_commitish: main
-          name: ${{ steps.meta.outputs.name }} ${{ steps.packaged.outputs.result }}
+          name: Release ${{ steps.packaged.outputs.result }}
           files: |
             ${{ steps.meta.outputs.dir }}/package.zip
           fail_on_unmatched_files: true

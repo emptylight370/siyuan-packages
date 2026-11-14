@@ -24,15 +24,6 @@ pre-commit:
       args: "{staged_files}"
       glob: "packages/*/*/meta.json"
 
-pre-push:
-  parallel: true
-  jobs:
-    - name: Create tag for packages
-      script: createtag.ps1
-      runner: "pwsh -NoProfile -File"
-      args: "{push_files}"
-      glob: "packages/*/*/meta.json"
-
 # EXAMPLE USAGE:
 #
 #   Refer for explanation to following link:
