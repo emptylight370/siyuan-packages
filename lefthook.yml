@@ -14,13 +14,13 @@ pre-commit:
 
     - name: Sync version to package.json
       script: syncversion.ps1
-      runner: "pwsh -File"
+      runner: "pwsh -NoProfile -File"
       args: "{staged_files}"
       glob: "packages/*/*/meta.json"
 
     - name: Generate changelog for packages
       script: changelog.ps1
-      runner: "pwsh -File"
+      runner: "pwsh -NoProfile -File"
       args: "{staged_files}"
       glob: "packages/*/*/meta.json"
 
@@ -29,7 +29,7 @@ pre-push:
   jobs:
     - name: Create tag for packages
       script: createtag.ps1
-      runner: "pwsh -File"
+      runner: "pwsh -NoProfile -File"
       args: "{push_files}"
       glob: "packages/*/*/meta.json"
 
