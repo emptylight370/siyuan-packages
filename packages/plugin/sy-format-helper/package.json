@@ -2,7 +2,7 @@
   "name": "sy-format-helper",
   "version": "0.7.2",
   "scripts": {
-    "lint": "eslint . --fix --cache",
+    "lint": "oxlint . --fix",
     "dev": "node ../../../scripts/build-plugin.mjs --watch",
     "build": "node ../../../scripts/build-plugin.mjs --production",
     "clean": "rimraf dist package.zip"
@@ -11,8 +11,7 @@
   "devDependencies": {
     "esbuild": "^0.28.2",
     "jszip": "^3.10.1",
-    "rimraf": "^6.1.3",
     "sass": "^1.107.1",
-    "siyuan": "^1.2.9"
+    "siyuan": "^1.3.0"
   }
 }

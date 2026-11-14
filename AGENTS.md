@@ -12,8 +12,8 @@ pnpm install                      # 安装根与所有 workspace 包的依赖
 pnpm -r build                     # 构建全部包（各包调用根 scripts/build-plugin.mjs）
 pnpm --filter sy-format-helper build   # 单包 production 构建，产出 <pkg>/dist 与 <pkg>/package.zip
 pnpm --filter sy-format-helper dev     # esbuild watch，产物写到包根，便于软链到思源插件目录调试
-pnpm lint                         # eslint packages/plugin
-pnpm lint:fix                     # 同上并自动修复，带 .eslintcache
+pnpm lint                         # oxlint packages/plugin
+pnpm lint:fix                     # 同上并自动修复
 pnpm format                       # prettier -w .（读根 .prettierrc 与 .prettierignore）
 pnpm -r clean                     # 删除各包 dist 与 package.zip
 mise run tag                      # 为各包创建本地发布 tag（已存在或版本未变则跳过）
@@ -99,9 +99,23 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 ### 工具链分层
 
 - **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*"]`）。
-- **根 `package.json`** 只放 lint 工具链（eslint 全家、typescript），脚本是 workspace 级聚合。
+- **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）与类型包（@types/*），脚本是 workspace 级聚合。
 - **包内 `package.json`** 只放构建链（esbuild、sass、jszip、rimraf）与 `siyuan` 类型；`prettier` 不装（mise 提供，避免双版本漂移）。
-- 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`eslint.config.mjs`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
+- 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`.oxlintrc.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
+
+### lint（oxlint）
+
+lint 已从 ESLint 迁到 **oxlint**，配置在根 `.oxlintrc.json`：
+
+- 由 `npx @oxlint/migrate eslint.config.mjs` 生成后手工修正——migrate 会把 ESLint 的全局规则块转成 `overrides[].files: [null]` 导致解析失败，已把该块的规则合并进顶层 `rules`（含 `prefer-const`、`no-var` 等，以及被 `@typescript-eslint/recommended` 关闭的一批 core 规则）
+- 采用**显式规则列表**（82 条）而非类别开关（`categories.correctness` 为 `off`），含 `typescript` 与 `unicorn` 插件；跳过了 2 条 Nursery（`no-undef`、`no-useless-assignment`）与 2 条不支持（`no-dupe-args`、`no-octal`）
+- `no-unused-vars` 配置为 `["warn", { "caughtErrors": "none" }]`，catch 参数不检查，与迁移前一致
+- oxlint **不做类型检查、不读 tsconfig**；`quotes` / `semi` / `indent` 这类格式规则不存在（规则表共 872 条，搜不到），与 prettier 天然无冲突，`eslint-config-prettier` 已随之删除
+- **不要开启 `Style` 类（279 条）**：整体开启会产生 714 个写法偏好告警（如 `prefer-destructuring`），噪音远大于收益
+- `lint:fix` = `oxlint --fix`，只应用安全变更；`.eslintcache` 已废弃
+
+**TS 版本约束解除**：移除 `@typescript-eslint` 后，`typescript` 不再被 `>=4.8.4 <6.1.0` 的 peer 锁定（曾实测 TS 7.0 会让 ESLint 崩溃），可升级至 TS 7；类型检查用的 `tsc` 换成 tsgo 后，`tsconfig.node.json` 的 `composite` + `--noEmit` 组合需重新实测。
+
 - 包内 `.mise/tasks/` 会被 mise 识别为任务（无需包内 `mise.toml`），但必须用 `mise -C <pkgDir> run <task>` 调用，根目录下看不到子包任务。当前有 `changelog` 与 `release` 两个任务。
 
 ### TypeScript 配置
@@ -121,7 +135,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chrome95`，与 tsconfig 的 `target` 相互独立。
 
-类型检查**不在**质量门禁内（`pnpm lint` 只跑 eslint，不读 tsconfig），需要时手动执行 `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json`；含 `.vue` 的包需要 `vue-tsc` 才能覆盖 SFC 内部（当前靠 `*.vue` 声明文件绕过了那部分）。
+类型检查**不在**质量门禁内（`pnpm lint` 只跑 oxlint，不读 tsconfig），需要时手动执行 `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json`；含 `.vue` 的包需要 `vue-tsc` 才能覆盖 SFC 内部（当前靠 `*.vue` 声明文件绕过了那部分）。
 
 ### Git hooks
 
@@ -194,7 +208,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 ## 新增一个包的步骤
 
 1. `git subtree add --prefix=packages/<type>/<pkg> <repo> main`
-2. 删除包内的 `mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/locks/`、`.vscode/`、`.github/`、`build.mjs`、`release.js`、`eslint.config.mjs`、`CHANGELOG.md`，以及原仓库自带的 AI 指引（`CODEBUDDY.md` / `AGENTS.md`，按第 10 步重写）；`mise.toml` 保留，但删掉与根重复的 `[tools]` 与 `[deps.*]`，其余内容（如 `[env] _.file = [".env"]`）原样保留；若原文件只有 `[tools]` / `[deps.*]`，直接删除整个文件
+2. 删除包内的 `mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/locks/`、`.vscode/`、`.github/`、`build.mjs`、`release.js`、`.oxlintrc.json`、`CHANGELOG.md`，以及原仓库自带的 AI 指引（`CODEBUDDY.md` / `AGENTS.md`，按第 10 步重写）；`mise.toml` 保留，但删掉与根重复的 `[tools]` 与 `[deps.*]`，其余内容（如 `[env] _.file = [".env"]`）原样保留；若原文件只有 `[tools]` / `[deps.*]`，直接删除整个文件
 3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）并 `git rm --cached` 原文件；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 4. 按原包构建方式二选一：
    - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
