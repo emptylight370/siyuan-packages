@@ -8,10 +8,9 @@ body = """
 {% if version %}\
     {% set current = version | split(pat="@") | last %}\
     {% if previous.version %}\
-        {% set previousVersion = previous.version | split(pat="@") | last %}\
-        ## [{{ current }}](<REPO>/compare/{{ previousVersion }}...{{ current }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        ## [{{ current }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% else %}\
-        ## [{{ current }}](<REPO>/compare/{{ commit_range.from }}...{{ current }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        ## [{{ current }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% endif %}\
 {% else %}\
     ## [unreleased]
@@ -39,7 +38,7 @@ render_always = true
 # An array of regex based postprocessors to modify the changelog.
 postprocessors = [
   # Replace the placeholder <REPO> with a URL.
-  { pattern = "<REPO>", replace = "https://github.com/emptylight370/sy-format-helper" },
+  { pattern = "<REPO>", replace = "https://github.com/emptylight370/siyuan-packages" },
 ]
 # output file path
 output = "whatschange.md"

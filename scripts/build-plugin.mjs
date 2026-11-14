@@ -1,13 +1,39 @@
-import { context } from 'esbuild';
-import * as sass from 'sass';
-import JSZip from 'jszip';
+// 通用插件包构建脚本：在 packages/<type>/<pkg> 目录下运行（pnpm --filter <pkg> build 的 cwd 即包目录）
+import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-const pkgDir = import.meta.dirname;
-const rootDir = path.resolve(pkgDir, '..', '..', '..');
+const pkgDir = process.cwd();
 const pkgName = path.basename(pkgDir);
 const pkgType = path.basename(path.dirname(pkgDir));
+
+// 构建依赖装在各自包内（pnpm 严格模式），因此从包目录解析而不是从脚本所在位置
+const requireFromPackage = createRequire(path.join(pkgDir, 'package.json'));
+
+let esbuildModule;
+let jszipModule;
+
+function requireFromPackageOrThrow(name) {
+    try {
+        return requireFromPackage(name);
+    } catch (error) {
+        throw new Error(`当前包没有安装 ${name}，请先执行 pnpm install`, { cause: error });
+    }
+}
+
+function getEsbuild() {
+    if (!esbuildModule) {
+        esbuildModule = requireFromPackageOrThrow('esbuild');
+    }
+    return esbuildModule;
+}
+
+function getJSZip() {
+    if (!jszipModule) {
+        jszipModule = requireFromPackageOrThrow('jszip');
+    }
+    return jszipModule;
+}
 
 const isProd = process.argv.includes('--production');
 const isWatch = process.argv.includes('--watch');
@@ -34,12 +60,22 @@ const REQUIRED_FIELDS = [
     'preview',
 ];
 
+let sassModule;
+
+// sass 仅在有 .scss 引入时才需要，避免纯静态包被迫安装
+function getSass() {
+    if (!sassModule) {
+        sassModule = requireFromPackageOrThrow('sass');
+    }
+    return sassModule;
+}
+
 // 把 sass 编译结果交给 esbuild 处理，使其能像 css 一样被 import 并输出独立文件
 const sassPlugin = {
     name: 'sass',
     setup(build) {
         build.onLoad({ filter: /\.scss$/ }, async (args) => {
-            const result = await sass.compileAsync(args.path, {
+            const result = await getSass().compileAsync(args.path, {
                 style: isProd ? 'compressed' : 'expanded',
             });
             return { contents: result.css, loader: 'css' };
@@ -73,14 +109,6 @@ function substitute(value, vars) {
     return value;
 }
 
-async function readJson(file) {
-    try {
-        return JSON.parse(await fs.readFile(file, 'utf8'));
-    } catch (error) {
-        throw new Error(`读取 ${path.relative(rootDir, file)} 失败: ${error.message}`, { cause: error });
-    }
-}
-
 async function exists(target) {
     try {
         await fs.access(target);
@@ -88,6 +116,44 @@ async function exists(target) {
     } catch {
         return false;
     }
+}
+
+async function readJson(rootDir, file) {
+    try {
+        return JSON.parse(await fs.readFile(file, 'utf8'));
+    } catch (error) {
+        throw new Error(`读取 ${path.relative(rootDir, file)} 失败: ${error.message}`, { cause: error });
+    }
+}
+
+async function readLicense() {
+    try {
+        return await fs.readFile(path.join(pkgDir, 'LICENSE'), 'utf8');
+    } catch (error) {
+        throw new Error('包目录缺少 LICENSE，无法注入许可证声明', { cause: error });
+    }
+}
+
+function assertPackageLayout() {
+    if (path.basename(path.dirname(path.dirname(pkgDir))) !== 'packages') {
+        throw new Error(`构建脚本需在 packages/<type>/<pkg> 目录下运行，当前目录: ${pkgDir}`);
+    }
+}
+
+// 从包目录向上查找仓库根（以 bazaar.json 为标志）
+async function findRootDir(start) {
+    let current = start;
+    for (let depth = 0; depth < 6; depth += 1) {
+        if (await exists(path.join(current, 'bazaar.json'))) {
+            return current;
+        }
+        const parent = path.dirname(current);
+        if (parent === current) {
+            break;
+        }
+        current = parent;
+    }
+    throw new Error(`无法从 ${start} 定位仓库根目录（未找到 bazaar.json）`);
 }
 
 async function assertAssets(meta) {
@@ -101,8 +167,8 @@ async function assertAssets(meta) {
 }
 
 // 将 bazaar.json 的类型模板与包内 meta.json 合并为符合集市规范的元数据文件
-async function composeMeta() {
-    const bazaar = await readJson(path.join(rootDir, 'bazaar.json'));
+async function composeMeta(rootDir) {
+    const bazaar = await readJson(rootDir, path.join(rootDir, 'bazaar.json'));
     const base = bazaar.types?.[pkgType];
     if (!base) {
         throw new Error(`bazaar.json 缺少 types.${pkgType}`);
@@ -111,7 +177,7 @@ async function composeMeta() {
         throw new Error('bazaar.json 缺少 owner');
     }
 
-    const meta = await readJson(path.join(pkgDir, 'meta.json'));
+    const meta = await readJson(rootDir, path.join(pkgDir, 'meta.json'));
     for (const key of RESERVED_KEYS) {
         if (key in meta) {
             throw new Error(`meta.json 不应包含 ${key}，该字段由构建派生`);
@@ -150,11 +216,15 @@ async function copyAssets() {
         (name) => name === 'icon.png' || name === 'preview.png' || /^README.*\.md$/.test(name),
     );
     await Promise.all(names.map((name) => fs.copyFile(path.join(pkgDir, name), path.join(outDir, name))));
-    await fs.cp(path.join(pkgDir, 'src', 'i18n'), path.join(outDir, 'i18n'), { recursive: true });
+
+    const i18nDir = path.join(pkgDir, 'src', 'i18n');
+    if (await exists(i18nDir)) {
+        await fs.cp(i18nDir, path.join(outDir, 'i18n'), { recursive: true });
+    }
 }
 
 async function createPackageZip() {
-    const zip = new JSZip();
+    const zip = new (getJSZip())();
     const addDir = async (dir) => {
         const entries = await fs.readdir(dir, { withFileTypes: true });
         for (const entry of entries) {
@@ -178,6 +248,9 @@ async function createPackageZip() {
 }
 
 async function main() {
+    assertPackageLayout();
+    const rootDir = await findRootDir(pkgDir);
+
     if (isProd) {
         await fs.rm(distDir, { recursive: true, force: true });
         await fs.rm(zipPath, { force: true });
@@ -185,9 +258,10 @@ async function main() {
     }
 
     await copyAssets();
-    const meta = await composeMeta();
+    const meta = await composeMeta(rootDir);
     console.log(`${metaFile} ${meta.name}@${meta.version}`);
 
+    const { context } = getEsbuild();
     const ctx = await context({
         entryPoints: [path.join(pkgDir, 'src', 'index.ts')],
         outfile: path.join(outDir, 'index.js'),
@@ -199,7 +273,7 @@ async function main() {
         minify: isProd,
         sourcemap: isProd ? false : 'inline',
         legalComments: 'none',
-        banner: isProd ? { js: await fs.readFile(path.join(pkgDir, 'LICENSE'), 'utf8') } : undefined,
+        banner: isProd ? { js: await readLicense() } : undefined,
         plugins: [sassPlugin],
         logLevel: 'info',
     });

@@ -1,28 +1,13 @@
 {
   "name": "sy-format-helper",
   "version": "0.7.1",
-  "description": "SiYuan format helper",
-  "main": "dist/index.js",
   "scripts": {
     "lint": "eslint . --fix --cache",
-    "format": "prettier -w src README*.md",
-    "dev": "node build.mjs --watch",
-    "build": "node build.mjs --production",
+    "dev": "node ../../../scripts/build-plugin.mjs --watch",
+    "build": "node ../../../scripts/build-plugin.mjs --production",
     "clean": "rimraf dist package.zip"
   },
-  "keywords": [],
-  "author": "Emptylight",
   "license": "MIT",
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": ">=24.0.0"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": ">=11.0.0"
-    }
-  },
   "devDependencies": {
     "esbuild": "^0.28.2",
     "jszip": "^3.10.1",

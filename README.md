@@ -1,0 +1,17 @@
+# 思源集市包
+
+以下列出本人开发的思源集市包。
+
+本仓库采用 monorepo 结构，具体各集市包源码位于 `packages` 目录下。发布版本时从源码构建并发布到对应仓库，由集市收录更新。若未上架集市则需前往对应仓库检查发布。
+
+具体各包可能有独立的说明文档与协议，请自行查看。
+
+## 插件
+
+### sy-format-helper
+
+[格式助手](packages/plugin/sy-format-helper/)
+
+说明文档：[简体中文](packages/plugin/sy-format-helper/README.zh-CN.md) | [English](packages/plugin/sy-format-helper/README.md)
+
+发布仓库：[emptylight370/sy-format-helper](https://github.com/emptylight370/sy-format-helper/releases)

@@ -1,4 +1,5 @@
-[English](https://github.com/emptylight370/sy-format-helper/blob/main/README.md)
+**简体中文**
+| [English](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/README.md)
 
 ![GitHub Release Date](https://img.shields.io/github/release-date/emptylight370/sy-format-helper?display_date=published_at&link=https%3A%2F%2Fgithub.com%2Femptylight370%2Fsy-format-helper/releases/latest)
 ![GitHub Release](https://img.shields.io/github/v/release/emptylight370/sy-format-helper?link=https%3A%2F%2Fgithub.com%2Femptylight370%2Fsy-format-helper/releases/latest)
@@ -61,8 +62,8 @@
 
 ## 更新日志
 
-> 完整[更新日志](https://github.com/emptylight370/sy-format-helper/blob/main/changelog.md)
-> 完整[提交记录](https://github.com/emptylight370/sy-format-helper/blob/main/whatschange.md)
+> 完整[更新日志](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/changelog.md)
+> 完整[提交记录](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/whatschange.md)
 
 - v0.7.1
   - 修复部分行内元素错误处理问题

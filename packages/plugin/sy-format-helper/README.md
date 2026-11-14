@@ -1,4 +1,5 @@
-[中文](https://github.com/emptylight370/sy-format-helper/blob/main/README_zh_CN.md)
+[简体中文](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/README.zh-CN.md)
+| **English**
 
 ![GitHub Release Date](https://img.shields.io/github/release-date/emptylight370/sy-format-helper?display_date=published_at&link=https%3A%2F%2Fgithub.com%2Femptylight370%2Fsy-format-helper/releases/latest)
 ![GitHub Release](https://img.shields.io/github/v/release/emptylight370/sy-format-helper?link=https%3A%2F%2Fgithub.com%2Femptylight370%2Fsy-format-helper/releases/latest)
@@ -61,8 +62,8 @@ Wait a minute to refresh the layout, if your change doesn't loaded, you should r
 
 ## Update Logs
 
-> Complete [changelog](https://github.com/emptylight370/sy-format-helper/blob/main/changelog.md)
-> Complete [commit history](https://github.com/emptylight370/sy-format-helper/blob/main/whatschange.md)
+> Complete [changelog](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/changelog.md)
+> Complete [commit history](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/whatschange.md)
 
 - v0.7.1
   - Fix issue that some inline items are not correctly convert
