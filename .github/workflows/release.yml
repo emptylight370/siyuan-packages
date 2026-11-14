@@ -55,7 +55,7 @@ jobs:
             exit 1
           fi
 
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
         if: steps.state.outputs.skip != 'true'
 
       - name: Install dependencies
@@ -105,7 +105,7 @@ jobs:
 
       - name: Release
         if: steps.state.outputs.skip != 'true'
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           # 跨仓库发布：repository 为 owner/repo，token 必须是能写目标仓库的 PAT
           repository: ${{ steps.meta.outputs.owner }}/${{ steps.meta.outputs.name }}
