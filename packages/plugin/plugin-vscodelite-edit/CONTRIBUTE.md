@@ -21,17 +21,16 @@
 
 ## Get started
 
-1. Use the `Use the template` button to make a copy of this repo as template.  
+1. Use the `Use the template` button to make a copy of this repo as template.
+
 > [!WARNING]
 >
 > That the repository name should match the plugin name, and the default branch must be `main`.
-
 
 2. Use `git clone` to clone the copied repo to your computer.
 3. Use `pnpm i` to install the dependencies.
 
 4. Copy the `.env.example` file as `.env`, set the `VITE_SIYUAN_WORKSPACE_PATH` to your SiYuan workspace.
-
 
 > [!TIP]
 >
@@ -43,51 +42,46 @@
 
 5. Use `pnpm dev` to run the project, you will see info like below
 
-  ```
+```
 
-  > plugin-sample-vite-vue@0.0.1 dev /path/to/your/plugin-sample-vite-vue
-  > vite build --watch
+> plugin-sample-vite-vue@0.0.1 dev /path/to/your/plugin-sample-vite-vue
+> vite build --watch
 
-  mode=> production
-  env=> {
-    VITE_SIYUAN_WORKSPACE_PATH: '/path/to/siyuan/workspace',
-    VITE_DEV_DIST_DIR: ''
-  }
+mode=> production
+env=> {
+  VITE_SIYUAN_WORKSPACE_PATH: '/path/to/siyuan/workspace',
+  VITE_DEV_DIST_DIR: ''
+}
 
-  Siyuan workspace path is set:
-  /path/to/siyuan/workspace
+Siyuan workspace path is set:
+/path/to/siyuan/workspace
 
-  Plugin will build to:
-  # ✅ the plugin will build into here
-  /path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
+Plugin will build to:
+# ✅ the plugin will build into here
+/path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
 
-  isWatch=> true
-  distDir=> /path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
-  vite v6.3.5 building for production...
+isWatch=> true
+distDir=> /path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
+vite v6.3.5 building for production...
 
-  watching for file changes...
+watching for file changes...
 
-  build started...
-  ✓ 26 modules transformed.
-  rendering chunks (1)...LiveReload enabled
-  ../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.css    1.08 kB │ gzip:  0.41 kB
-  ../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.js   198.60 kB │ gzip: 46.59 kB
-  [vite-plugin-static-copy] Copied 7 items.
-  built in 502ms.
-  ```
+build started...
+✓ 26 modules transformed.
+rendering chunks (1)...LiveReload enabled
+../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.css    1.08 kB │ gzip:  0.41 kB
+../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.js   198.60 kB │ gzip: 46.59 kB
+[vite-plugin-static-copy] Copied 7 items.
+built in 502ms.
+```
 
+If successed, restart your siyuan, and you will find the plugin in `Siyuan - Settings - Marketplace`, named as `plugin-sample-vite-vue`. 6. Enable the plugin, and check the `App.vue` file to start your development.
 
-   If successed, restart your siyuan, and you will find the plugin in `Siyuan - Settings - Marketplace`, named as `plugin-sample-vite-vue`.
-6. Enable the plugin, and check the `App.vue` file to start your development.
-   
-   This file contains some example codes.
-
+This file contains some example codes.
 
 > [!TIP]
 >
 > More plugin code examples, please check [siyuan/plugin-sample/src/index.ts](https://github.com/siyuan-note/plugin-sample/blob/main/src/index.ts)
-
-
 
 ## List on the Marketplace
 
@@ -100,8 +94,8 @@
 >
 > <div id="release-script"></div>This template provided a script to auto create tag and release. You can use `pnpm release` to create a patch version.
 >
-> You can add `--mode=manual|patch|minor|major` arg to set release mode, or run with arg like `pnpm release:manual`. 
-> 
+> You can add `--mode=manual|patch|minor|major` arg to set release mode, or run with arg like `pnpm release:manual`.
+>
 > All the scripts please see the `package.json` file.
 
 The github action is included in this sample, you can use it to publish your new realse to marketplace automatically:
@@ -136,9 +130,7 @@ The github action is included in this sample, you can use it to publish your new
 
 ```json
 {
-  "repos": [
-    "username/reponame"
-  ]
+  "repos": ["username/reponame"]
 }
 ```
 

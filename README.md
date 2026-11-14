@@ -8,6 +8,14 @@
 
 ## 插件
 
+### plugin-vscodelite-edit
+
+[VSCode Lite Edit](packages/plugin/plugin-vscodelite-edit/)
+
+说明文档：[简体中文](packages/plugin/plugin-vscodelite-edit/README.zh-CN.md) | [English](packages/plugin/plugin-vscodelite-edit/README.md)
+
+发布仓库：[emptylight370/plugin-vscodelite-edit](https://github.com/emptylight370/plugin-vscodelite-edit/releases)
+
 ### siyuan-ignoreeditor
 
 [忽略文件编辑器](packages/plugin/siyuan-ignoreeditor/)

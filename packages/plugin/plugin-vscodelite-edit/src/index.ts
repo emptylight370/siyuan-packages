@@ -1,13 +1,13 @@
 import { Plugin, getFrontend } from 'siyuan';
 import '@/index.scss';
-import PluginInfoString from '@/../plugin.json';
+import Meta from '@/../meta.json';
 import { destroy, init } from '@/main';
 
 let PluginInfo = {
     version: '',
 };
 try {
-    PluginInfo = PluginInfoString;
+    PluginInfo = Meta;
 } catch (err) {
     console.log('Plugin info parse error: ', err);
 }
@@ -15,16 +15,16 @@ const { version } = PluginInfo;
 
 export default class PluginVSCE extends Plugin {
     // Run as mobile
-    public isMobile: boolean;
+    public isMobile!: boolean;
     // Run in browser
-    public isBrowser: boolean;
+    public isBrowser!: boolean;
     // Run as local
-    public isLocal: boolean;
+    public isLocal!: boolean;
     // Run in Electron
-    public isElectron: boolean;
+    public isElectron!: boolean;
     // Run in window
-    public isInWindow: boolean;
-    public platform: SyFrontendTypes;
+    public isInWindow!: boolean;
+    public platform!: SyFrontendTypes;
     public readonly version = version;
 
     async onload() {

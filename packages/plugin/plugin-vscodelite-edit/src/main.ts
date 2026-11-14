@@ -1,8 +1,9 @@
 import { Plugin } from 'siyuan';
 import { createApp } from 'vue';
+import type { App as VueApp } from 'vue';
 import App from './App.vue';
 
-let plugin = null;
+let plugin: Plugin | null = null;
 export function usePlugin(pluginProps?: Plugin): Plugin {
     console.log('usePlugin', pluginProps, plugin);
     if (pluginProps) {
@@ -11,24 +12,26 @@ export function usePlugin(pluginProps?: Plugin): Plugin {
     if (!plugin && !pluginProps) {
         console.error('need bind plugin');
     }
-    return plugin;
+    return plugin!;
 }
 
-let app = null;
+let app: VueApp<Element> | null = null;
 export function init(plugin: Plugin) {
     // bind plugin hook
     usePlugin(plugin);
 
     const div = document.createElement('div');
     div.classList.toggle('plugin-sample-vite-vue-app');
-    div.id = this.name;
-    app = createApp(App);
-    app.mount(div);
+    // 普通函数里没有 this，原来写 this.name 取不到插件名
+    div.id = plugin.name;
+    const instance = createApp(App);
+    instance.mount(div);
+    app = instance;
     document.body.appendChild(div);
 }
 
 export function destroy() {
-    app.unmount();
-    const div = document.getElementById(this.name);
-    document.body.removeChild(div);
+    app?.unmount();
+    const div = document.getElementById(usePlugin().name);
+    if (div) document.body.removeChild(div);
 }

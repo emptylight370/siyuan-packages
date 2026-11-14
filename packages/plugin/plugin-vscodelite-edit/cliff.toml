@@ -7,9 +7,11 @@
 body = """
 {% if version %}\
     {% if previous.version %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        {% set current = version | split(pat="@") | last %}\
+        ## [{{ current }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% else %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        {% set current = version | split(pat="@") | last %}\
+        ## [{{ current }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% endif %}\
 {% else %}\
     ## [unreleased]
@@ -37,12 +39,16 @@ render_always = true
 # An array of regex based postprocessors to modify the changelog.
 postprocessors = [
   # Replace the placeholder <REPO> with a URL.
-  { pattern = "<REPO>", replace = "https://github.com/emptylight370/plugin-vscodelite-edit" },
+  { pattern = "<REPO>", replace = "https://github.com/emptylight370/siyuan-packages" },
 ]
 # output file path
-output = "CHANGELOG.md"
+output = "whatschange.md"
 
 [git]
+# 只使用本包的 tag 作为版本锚点（版本号在模板中剥离包名前缀）
+tag_pattern = "^plugin-vscodelite-edit@"
+# 只统计本包目录下的提交，避免其他包的提交混入（键名为复数，值为 glob 数组）
+include_paths = ["packages/plugin/plugin-vscodelite-edit/**"]
 # Parse commits according to the conventional commits specification.
 # See https://www.conventionalcommits.org
 conventional_commits = true
