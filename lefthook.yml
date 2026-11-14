@@ -10,6 +10,7 @@ pre-commit:
         - "*.json"
         - "*.{yaml,yml}"
         - ".prettierrc"
+        - "*.vue"
       stage_fixed: true
 
     - name: Sync version to package.json

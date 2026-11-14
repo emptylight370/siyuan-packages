@@ -8,6 +8,14 @@
 
 ## 插件
 
+### siyuan-ignoreeditor
+
+[忽略文件编辑器](packages/plugin/siyuan-ignoreeditor/)
+
+说明文档：[简体中文](packages/plugin/siyuan-ignoreeditor/README.zh-CN.md) | [English](packages/plugin/siyuan-ignoreeditor/README.md)
+
+发布仓库：[emptylight370/siyuan-ignoreeditor](https://github.com/emptylight370/siyuan-ignoreeditor/releases)
+
 ### sy-format-helper
 
 [格式助手](packages/plugin/sy-format-helper/)

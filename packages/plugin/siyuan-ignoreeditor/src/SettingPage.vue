@@ -17,7 +17,7 @@
             <!-- 忽略索引 -->
             <h3>{{ plugin.i18n?.indexignore }}</h3>
             <a :href="plugin.i18n?.ugIndexignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
-            <SyTextarea v-model="ignoreindex" style="resize: vertical;" />
+            <SyTextarea v-model="ignoreindex" style="resize: vertical" />
             <SyButton @click="loadIgnoreIndex">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
             <SyButton @click="saveIgnoreIndex">{{ plugin.i18n?.saveIndexignore }}</SyButton>
             <hr />
@@ -25,7 +25,7 @@
             <!-- 忽略搜索 -->
             <h3>{{ plugin.i18n?.searchignore }}</h3>
             <a :href="plugin.i18n?.ugSearchignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
-            <SyTextarea v-model="searchignore" style="resize: vertical;" />
+            <SyTextarea v-model="searchignore" style="resize: vertical" />
             <SyButton @click="loadSearchIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
             <SyButton @click="saveSearchIgnore">{{ plugin.i18n?.saveSearchignore }}</SyButton>
             <hr />
@@ -33,20 +33,20 @@
             <!-- 忽略引用 -->
             <h3>{{ plugin.i18n?.refsearchignore }}</h3>
             <a :href="plugin.i18n?.ugRefignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
-            <SyTextarea v-model="refsearchignore" style="resize: vertical;" />
+            <SyTextarea v-model="refsearchignore" style="resize: vertical" />
             <SyButton @click="loadRefsearchIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
             <SyButton @click="saveRefsearchIgnore">{{ plugin.i18n?.saveRefsearchignore }}</SyButton>
             <hr v-if="syncEnabled" />
 
             <!-- 忽略同步 -->
             <h3 v-if="syncEnabled">{{ plugin.i18n?.syncignore }}</h3>
-            <a :href="plugin.i18n?.ugSyncignoreLink" @click="closeSetting"
-              v-if="syncEnabled">{{ plugin.i18n?.ugLink }}</a>
-            <SyTextarea v-model="syncignore" style="resize: vertical;" v-if="syncEnabled" />
+            <a :href="plugin.i18n?.ugSyncignoreLink" @click="closeSetting" v-if="syncEnabled">{{
+              plugin.i18n?.ugLink
+            }}</a>
+            <SyTextarea v-model="syncignore" style="resize: vertical" v-if="syncEnabled" />
             <SyButton @click="loadSyncIgnore" v-if="syncEnabled">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
             <SyButton @click="saveSyncIgnore" v-if="syncEnabled">{{ plugin.i18n?.saveSyncignore }}</SyButton>
           </div>
-
         </div>
       </div>
     </div>

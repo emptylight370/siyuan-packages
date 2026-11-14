@@ -1,13 +1,13 @@
 import { Plugin, getFrontend } from 'siyuan';
 import '@/index.scss';
-import PluginInfoString from '@/../plugin.json';
+import Meta from '@/../meta.json';
 import { destroy, init } from '@/main';
 
 let PluginInfo = {
     version: '',
 };
 try {
-    PluginInfo = PluginInfoString;
+    PluginInfo = Meta;
 } catch (err) {
     console.log('Plugin info parse error: ', err);
 }

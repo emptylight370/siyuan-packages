@@ -28,7 +28,7 @@ pnpm --filter ./packages/plugin/sy-format-helper build    # 根目录，按目�
 cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 ```
 
-产物位置按模式区分（构建实现统一在 `scripts/build-plugin.mjs`，包内脚本只是转发）：
+产物位置按模式区分。构建实现分两类：esbuild 包走 `scripts/build-plugin.mjs`（包内脚本只做转发），vite 包保留包内 `vite.config.ts`；两类构建的元数据合成统一由 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件：
 
 | 模式              | 命令                                                                | 产物                                                 |
 | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -159,10 +159,13 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 ## 新增一个包的步骤
 
 1. `git subtree add --prefix=packages/<type>/<pkg> <repo> main`
-2. 删除包内的 `mise.toml`、`mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/`、`.vscode/`、`.github/`、`build.mjs`
-3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）；**不要复制构建脚本**，包内 `package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
-4. 包内 `package.json` 只留构建依赖（esbuild、sass、jszip、rimraf）与 `siyuan`，脚本为 `dev` / `build` / `clean` / `lint`；`version` 由 pre-commit 的 `syncversion.ps1` 在提交时从 `meta.json` 自动对齐，不写 `main`、`keywords`、`author`、`description`、`devEngines` 等发布用字段
-5. 新建包内 `cliff.toml`，只需改 `tag_pattern` 与 `include_paths`（`postprocessors` 的 `<REPO>` 统一指向 monorepo，与包名无关）；同时把旧仓库的 `whatschange.md` 存为 `whatschange.old.md`，并把其中的仓库链接与 `compare` 参数迁移到 monorepo 形式
-6. 提供包内 `.mise/tasks/changelog.ps1`（可直接复制现有包）；不需要该任务的包也必须建**空任务占位**，否则 pre-commit 会因 `mise run changelog` 找不到任务而失败
-7. 根 `pnpm install`，再跑 `pnpm -r build` 与 `pnpm lint`
-8. 在根 `.gitignore` 无需新增规则；在目标仓库初始化 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支
+2. 删除包内的 `mise.toml`、`mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/locks/`、`.vscode/`、`.github/`、`build.mjs`、`release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`CODEBUDDY.md`
+3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）并 `git rm --cached` 原文件；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
+4. 按原包构建方式二选一：
+   - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
+   - **vite 包**：保留包内 `vite.config.ts`，把 `import pluginInfo from './plugin.json'` 换成 `resolvePluginMeta({ pkgDir: __dirname })`，再注册一个 `generateBundle` 插件用 `emitFile` 输出 `plugin.json`；源码里 `@/../plugin.json` 的引用改为 `@/../meta.json`，watch 的监听列表改为 `./meta.json` 与 `../../../bazaar.json`
+5. 包内 `package.json` 只留构建依赖（esbuild 包：esbuild、sass、jszip、rimraf；vite 包：vite、@vitejs/plugin-vue、vite-plugin-static-copy、vite-plugin-zip-pack、vue、sass、rimraf 等）与 `siyuan`，脚本为 `dev` / `build` / `clean` / `lint`；`version` 由 pre-commit 的 `syncversion.ps1` 在提交时从 `meta.json` 自动对齐，不写 `main`、`keywords`、`author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段
+6. 新建包内 `cliff.toml`，只需改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）与 `postprocessors` 的 `<REPO>`（统一指向 monorepo，与包名无关），并把模板标题的 `trim_start_matches(pat="v")` 改成 `split(pat="@") | last`；从未发布过的包无需 `whatschange.old.md`，迁移包则把旧 `whatschange.md` 存为 `whatschange.old.md` 并迁移其中链接
+7. 提供包内 `.mise/tasks/changelog.ps1`（可直接复制现有包）；不需要该任务的包也必须建**空任务占位**，否则 pre-commit 会因 `mise run changelog` 找不到任务而失败
+8. 根 `pnpm install`，再跑 `pnpm -r build` 与 `pnpm lint`；确认 `dist/plugin.json` 的 `name` / `url` / `version` 为派生值
+9. 在根 `.gitignore` 无需新增规则；在目标仓库初始化 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支
