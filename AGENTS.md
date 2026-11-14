@@ -134,6 +134,8 @@ pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格�
 
 子仓库的 tag 是**裸版本号**（`0.7.1`），不给 `v` 前缀也不带包名；monorepo 的 tag 才是 `<pkg>@<version>`。跨仓发布必须用 PAT 或 GitHub App token（`GITHUB_TOKEN` 只能作用于本仓库），且目标仓库必须已有 `main` 分支（stub 初始化）。
 
+**单次运行只处理 1 个包**：`parse-tag.mjs` 一次只解析一个 tag，且要求 `packages/*/<pkg>` 恰好命中 1 个目录；工作流是单 job、没有 `strategy.matrix`，`workflow_dispatch` 的 `inputs.tag` 也只有一个字符串。多包发布需推多个 tag，由 GitHub 为每个 tag 各自创建一次运行并行执行（`concurrency.group = release-<tag>` 按 tag 隔离：同 tag 排队不并行，不同 tag 完全并行）。因此每次运行都会重复 `checkout --fetch-depth 0` 与 `pnpm install --frozen-lockfile`，发 N 个包就有 N 次重复开销，只有 `pnpm --filter <pkg> build` 是单包范围。若要一次运行处理多包，需改成 matrix（拆分 `inputs.tags` 为列表）或加 pnpm store 缓存压低重复成本。
+
 ### changelog 配置
 
 每个包一份 `cliff.toml`，其中两项**必须逐包修改**：

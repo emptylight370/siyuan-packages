@@ -30,6 +30,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      # 处理 tag，提取包名和版本
       - name: Parse tag
         id: meta
         run: node scripts/parse-tag.mjs "${{ inputs.tag || github.ref_name }}"
@@ -62,12 +63,14 @@ jobs:
         if: steps.state.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
 
+      # 构建 package.zip
       - name: Build
         if: steps.state.outputs.skip != 'true'
         env:
           TAG_VERSION: ${{ steps.meta.outputs.version }}
         run: pnpm --filter "${{ steps.meta.outputs.name }}" build
 
+      # 创建提交日志
       - name: Generate release notes
         if: steps.state.outputs.skip != 'true'
         run: |
@@ -77,6 +80,7 @@ jobs:
             -o release.md
           prettier -w release.md
 
+      # 提取打包版本号
       - name: Get packaged version
         if: steps.state.outputs.skip != 'true'
         id: packaged
@@ -85,6 +89,7 @@ jobs:
           data: ${{ steps.meta.outputs.dir }}/dist/plugin.json
           filter: .version
 
+      # 验证将要发布的版本是否一致
       - name: Verify packaged version
         if: steps.state.outputs.skip != 'true'
         run: |
@@ -93,6 +98,7 @@ jobs:
             exit 1
           fi
 
+      # 检查仓库中配置的 RELEASE_TOKEN 是否可用
       - name: Check release token
         if: steps.state.outputs.skip != 'true'
         env:
@@ -103,6 +109,27 @@ jobs:
             exit 1
           fi
 
+      # 先把少量元数据同步到目标仓库，使之后创建的 tag 指向包含最新元数据的提交
+      - name: Sync metadata to target repo
+        if: steps.state.outputs.skip != 'true'
+        continue-on-error: true
+        run: |
+          dir="${{ steps.meta.outputs.dir }}"
+          git clone --depth=1 "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/${{ steps.meta.outputs.owner }}/${{ steps.meta.outputs.name }}.git" target
+          cp "$dir/dist/plugin.json" "$dir/dist/icon.png" "$dir/dist/preview.png" target/
+          cd target
+          git config user.name "${{ vars.COMMIT_NAME }}"
+          git config user.email "${{ vars.COMMIT_EMAIL }}"
+          # 用 status --porcelain 而非 diff --quiet：后者不统计新增文件
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "元数据无变化，无需提交"
+            exit 0
+          fi
+          git add plugin.json icon.png preview.png
+          git commit -m "chore(version): release ${{ steps.packaged.outputs.result }}"
+          git push
+
+      # 在目标仓库发布版本
       - name: Release
         if: steps.state.outputs.skip != 'true'
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
