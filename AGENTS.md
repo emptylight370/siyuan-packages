@@ -1,6 +1,8 @@
-# CODEBUDDY.md This file provides guidance to CodeBuddy when working with code in this repository.
+# 思源插件 monorepo
 
 思源（SiYuan）插件 monorepo。每个子包最终都要发布到自己的独立 GitHub 仓库，因为思源集市按「仓库」查找 `tag == version` 的 release 并下载其中的 `package.zip`。
+
+部分包内部有各自的 `AGENTS.md`，只描述该包的架构、命令与隐性约定，改动该包前应先读；跨包规则一律以本文件为准，两者冲突时本文件优先。
 
 ## 常用命令
 
@@ -192,7 +194,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 ## 新增一个包的步骤
 
 1. `git subtree add --prefix=packages/<type>/<pkg> <repo> main`
-2. 删除包内的 `mise.toml`、`mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/locks/`、`.vscode/`、`.github/`、`build.mjs`、`release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`CODEBUDDY.md`
+2. 删除包内的 `mise.lock`、`lefthook.yml`、`.prettierrc`、`.gitignore`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`、`.mise/locks/`、`.vscode/`、`.github/`、`build.mjs`、`release.js`、`eslint.config.mjs`、`CHANGELOG.md`，以及原仓库自带的 AI 指引（`CODEBUDDY.md` / `AGENTS.md`，按第 10 步重写）；`mise.toml` 保留，但删掉与根重复的 `[tools]` 与 `[deps.*]`，其余内容（如 `[env] _.file = [".env"]`）原样保留；若原文件只有 `[tools]` / `[deps.*]`，直接删除整个文件
 3. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`）并 `git rm --cached` 原文件；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 4. 按原包构建方式二选一：
    - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
@@ -202,3 +204,4 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 7. 提供包内 `.mise/tasks/changelog.ps1`（可直接复制现有包）；不需要该任务的包也必须建**空任务占位**，否则 pre-commit 会因 `mise run changelog` 找不到任务而失败
 8. 根 `pnpm install`，再跑 `pnpm -r build` 与 `pnpm lint`；确认 `dist/plugin.json` 的 `name` / `url` / `version` 为派生值
 9. 在根 `.gitignore` 无需新增规则；在目标仓库初始化 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支
+10. 补包内 `AGENTS.md`：写清该包的构建栈、模块职责、i18n 命名与隐性约定，并注明跨包规则以根 `AGENTS.md` 为准
