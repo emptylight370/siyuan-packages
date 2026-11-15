@@ -18,7 +18,7 @@
    - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.ts`
    - `meta.json` 声明的 `publish.resources`（如字体包的 `fonts/`）由构建脚本复制进产物目录，无需在包内写复制逻辑
    - CSS/SCSS 引用**包外运行时路径**（思源挂载路径，如 `../plugins/<pkg>/fonts/*.woff`）时依赖根脚本的 `external: ['siyuan', '../plugins/*']`，包内不要写复制逻辑；也不能改成 `../*`（会吞掉 CSS 产物）
-   - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, loadEnv, vue, fg, minimist, livereload, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
+   - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, vue, fg, minimist, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；watch 与 production 一律构建到包内 `dist/`（工厂已移除 `VITE_SIYUAN_WORKSPACE_PATH` 直写工作空间与 livereload 逻辑，调试走根 `deploy` 任务）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见 [release.md](./release.md#changelog-配置)）
 
@@ -37,7 +37,7 @@
 ## 官方模板新建的差异步骤
 
 1. `git clone --depth=1 https://github.com/siyuan-note/plugin-sample-vite-vue packages/plugin/<newpkg>` 并删除其中的 `.git` 与 `.github/`
-2. 删除 `release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`.editorconfig`（monorepo 未使用）；保留 `.env.example`（`VITE_SIYUAN_WORKSPACE_PATH` 的用法说明）与 `asset/`
+2. 删除 `release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`.editorconfig`、`.env.example`（`VITE_SIYUAN_WORKSPACE_PATH` 直写工作空间的逻辑已移除）（monorepo 未使用）；保留 `asset/`
 3. 模板 `viteStaticCopy` 按 `plugin.json` 的 `icon` / `preview` 字段动态生成图片 targets——改造后改为从 `resolvePluginMeta` 返回的 `meta.icon` / `meta.preview` 派生
 4. 官方模板的 i18n 复制无 `stripBase`，必须补 `rename: { stripBase: 2 }`，否则产物出现 `dist/i18n/src/i18n/*.json` 嵌套（`siyuan-ignoreeditor` 与 `plugin-vscodelite-edit` 都踩过）
 5. 演示代码取舍：`src/components/SiyuanTheme/`（主题控件）、`src/types/`（思源类型）、`src/utils/`（挂载工具）通常保留；`App.vue` 的示例逻辑按新包功能重写

@@ -30,17 +30,7 @@
 2. 使用 `git clone` 克隆创建好的仓库。
 3. 使用 `pnpm i` 安装项目所需的依赖。
 
-4. 复制 `.env.example` 文件并取名为 `.env`，修改其中的 `VITE_SIYUAN_WORKSPACE_PATH` 为你的思源工作空间。
-
-> [!TIP]
->
-> 如果你不喜欢将项目打包至工作空间中，可以使用 `软链接` 的方式。
->
-> 直接写入思源空间下，可通过思源的同步功能直接同步至其他设备，而软链接的方式则不会参与同步。
->
-> 本模板不提供软链接的具体内容，相关内容可参考 [plugin-sample-vite-svelte](https://github.com/siyuan-note/plugin-sample-vite-svelte)。
-
-5. 使用 `pnpm dev` 启动项目，看到类似下面的内容表示构建成功
+4. 使用 `pnpm dev` 启动项目，看到类似下面的内容表示构建成功
 
 ```
 
@@ -48,33 +38,27 @@
 > vite build --watch
 
 mode=> production
-env=> {
-  VITE_SIYUAN_WORKSPACE_PATH: '/path/to/siyuan/workspace',
-}
-
-Siyuan workspace path is set:
-/path/to/siyuan/workspace
-
-Plugin will build to:
-# ✅ 插件将会构建至下面的位置
-/path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
 
 isWatch=> true
-distDir=> /path/to/siyuan/workspace/data/plugins/plugin-sample-vite-vue
-vite v6.3.5 building for production...
+distDir=> ./dist
+vite v8.3.6 building for production...
 
 watching for file changes...
 
 build started...
 ✓ 26 modules transformed.
-rendering chunks (1)...LiveReload enabled
-../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.css    1.08 kB │ gzip:  0.41 kB
-../../Siyuan-plugin/data/plugins/plugin-sample-vite-vue/index.js   198.60 kB │ gzip: 46.59 kB
+rendering chunks (1)...
+dist/index.css    1.08 kB │ gzip:  0.41 kB
+dist/index.js   198.60 kB │ gzip: 46.59 kB
 [vite-plugin-static-copy] Copied 7 items.
 built in 502ms.
 ```
 
-刷新思源，你将会在 `思源 - 设置 - 集市` 中看到名为 `plugin-sample-vite-vue` 的插件。
+> [!TIP]
+>
+> 构建产物输出在包内 `dist/`，不会写入思源工作空间。调试时在仓库根运行 `mise run deploy -- -package <包名>`，会把 `dist/` 镜像同步到当前打开思源工作空间的 `data/plugins/<包名>`；也可以手动把 `dist` 的内容复制或软链到该位置。
+
+5. 部署后刷新思源，你将会在 `思源 - 设置 - 集市` 中看到名为 `plugin-sample-vite-vue` 的插件。
 
 6. 启用插件, 并检查 `App.vue` 文件进行开发。
 

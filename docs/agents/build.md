@@ -37,7 +37,9 @@ cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 
 ## 产物目录随模式变化
 
-production 写 `dist/`，development 写**包根**（`index.js`、`index.css`、`i18n/`、`plugin.json` 都是产物，已被 `.gitignore` 忽略）。这是为了让包目录能直接软链成思源插件目录。
+production 写 `dist/`，development 写**包根**（`index.js`、`index.css`、`i18n`、`plugin.json` 都是产物，已被 `.gitignore` 忽略）。这是为了让包目录能直接软链成思源插件目录。
+
+vite 包（`siyuan-ignoreeditor`、`plugin-vscodelite-edit`）的 watch 与 production **一律构建到包内 `dist/`**（watch 不压缩、不 zip），没有直写思源工作空间的逻辑（`VITE_SIYUAN_WORKSPACE_PATH` / livereload 已移除）；调试统一走根 `deploy` 任务把 `dist/` 镜像同步到工作空间，或手动复制/软链 `dist`。
 
 ## 构建实现
 

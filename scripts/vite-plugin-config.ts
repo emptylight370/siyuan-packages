@@ -15,11 +15,9 @@ export interface CreatePluginViteConfigOptions {
     /** 包内解析的 vite 辅助函数与插件构造器（包内 import 后整体传入） */
     deps: {
         defineConfig: (config: unknown) => unknown;
-        loadEnv: (mode: string, envDir: string) => Record<string, string>;
         vue: (...args: unknown[]) => unknown;
         fg: (patterns: string[]) => Promise<string[]>;
         minimist: (argv: string[]) => Record<string, unknown>;
-        livereload: (dir: string) => unknown;
         viteStaticCopy: (options: unknown) => unknown;
         zipPack: (options: unknown) => unknown;
     };
@@ -44,7 +42,7 @@ export function createPluginViteConfig({
     deps,
     watchFiles = DEFAULT_WATCH_FILES,
 }: CreatePluginViteConfigOptions): unknown {
-    const { defineConfig, loadEnv, vue, fg, minimist, livereload, viteStaticCopy, zipPack } = deps;
+    const { defineConfig, vue, fg, minimist, viteStaticCopy, zipPack } = deps;
     let pluginInfo: PluginMeta | undefined;
 
     const emitPluginJson = {
@@ -63,27 +61,15 @@ export function createPluginViteConfig({
         // 元数据由 bazaar.json 的类型模板与包内 meta.json 合成，plugin.json 是构建产物而非源文件
         ({ meta: pluginInfo } = await resolvePluginMeta({ pkgDir }));
         console.log('mode=>', mode);
-        const envVars = loadEnv(mode, pkgDir);
-        const { VITE_SIYUAN_WORKSPACE_PATH } = envVars;
-        console.log('env=>', envVars);
-
-        const siyuanWorkspacePath = VITE_SIYUAN_WORKSPACE_PATH;
-        let devDistDir = './dev';
-        if (!siyuanWorkspacePath) {
-            console.log('\nSiyuan workspace path is not set.');
-        } else {
-            console.log(`\nSiyuan workspace path is set:\n${siyuanWorkspacePath}`);
-            devDistDir = `${siyuanWorkspacePath}/data/plugins/${pluginInfo?.name}`;
-        }
-        console.log(`\nPlugin will build to:\n${devDistDir}`);
 
         const args = minimist(process.argv.slice(2));
         const isWatch = args.watch || args.w || false;
-        const distDir = isWatch ? devDistDir : './dist';
 
         console.log();
         console.log('isWatch=>', isWatch);
-        console.log('distDir=>', distDir);
+        // watch 与 production 一律构建到包内 dist/；调试用根任务 mise run deploy 镜像同步，
+        // 或手动把 dist 内容复制/软链为思源 data/plugins/<pkg>
+        console.log('distDir=>', './dist');
 
         return {
             resolve: {
@@ -126,9 +112,9 @@ export function createPluginViteConfig({
             },
 
             build: {
-                // 输出路径：production 写 dist/，watch 时直写思源工作空间插件目录
-                outDir: distDir,
-                emptyOutDir: !isWatch,
+                // 输出路径：watch 与 production 都写包内 dist/
+                outDir: './dist',
+                emptyOutDir: true,
 
                 // 构建后是否生成 source map 文件
                 sourcemap: false,
@@ -144,11 +130,10 @@ export function createPluginViteConfig({
                 rollupOptions: {
                     plugins: [
                         emitPluginJson,
+                        // watch 时监听静态资源文件与元数据；production 打 zip
                         ...(isWatch
                             ? [
-                                  livereload(devDistDir),
                                   {
-                                      // 监听静态资源文件与元数据
                                       name: 'watch-external',
                                       async buildStart(this: { addWatchFile: (file: string) => void }) {
                                           const files = await fg(watchFiles);

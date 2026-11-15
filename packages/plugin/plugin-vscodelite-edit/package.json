@@ -6,7 +6,7 @@
     "lint": "oxlint . --fix",
     "dev": "vite build --watch",
     "build": "vite build",
-    "clean": "rimraf dist package.zip dev"
+    "clean": "rimraf dist package.zip"
   },
   "license": "MIT",
   "devDependencies": {
@@ -14,7 +14,6 @@
     "fast-glob": "catalog:",
     "minimist": "catalog:",
     "rimraf": "catalog:",
-    "rollup-plugin-livereload": "catalog:",
     "sass": "catalog:",
     "siyuan": "catalog:",
     "sy-api": "workspace:*",
