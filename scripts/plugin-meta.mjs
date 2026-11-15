@@ -4,12 +4,12 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 const RESERVED_KEYS = ['name', 'url'];
+// 集市不强制 minAppVersion（缺省视为全版本适用），故只推荐填写、不列入必填
 const REQUIRED_FIELDS = [
     'name',
     'author',
     'url',
     'version',
-    'minAppVersion',
     'backends',
     'frontends',
     'displayName',

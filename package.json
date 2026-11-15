@@ -5,6 +5,7 @@
   "description": "SiYuan plugin monorepo",
   "scripts": {
     "build": "pnpm -r build",
+    "check": "node scripts/check-packages.mjs",
     "clean": "pnpm -r clean",
     "lint": "oxlint packages",
     "lint:fix": "oxlint packages --fix",

@@ -19,6 +19,9 @@ pre-commit:
       args: "{staged_files}"
       glob: "packages/*/*/meta.json"
 
+    - name: Check package contracts
+      run: pnpm check
+
     - name: Generate changelog for packages
       script: changelog.ps1
       runner: "pwsh -NoProfile -File"

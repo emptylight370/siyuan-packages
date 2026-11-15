@@ -90,7 +90,22 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 `scripts/build-plugin.mjs` 的 `composeMeta()` 负责：`bazaar.types[type]` 与 `meta.json` 深合并（对象递归、数组整体替换）→ `${owner}/${name}/${version}` 占位符替换 → 派生 `name`（目录名）、`url`（`https://github.com/<owner>/<name>`）、`version` → 校验。
 
-规则：`meta.json` **禁止**出现 `name` / `url`（构建期派生，出现即报错）；12 个必填字段缺失即失败；`readme` / `icon` / `preview` / `publish.resources` 必须在产物目录存在；环境变量 `TAG_VERSION` 存在时必须等于 `meta.version`。
+规则：`meta.json` **禁止**出现 `name` / `url`（构建期派生，出现即报错）；11 个必填字段缺失即失败（`minAppVersion` 非必填——集市缺省视为全版本适用，仅推荐填写，`pnpm check` 会对缺失给警告）；`readme` / `icon` / `preview` / `publish.resources` 必须在产物目录存在；环境变量 `TAG_VERSION` 存在时必须等于 `meta.version`。
+
+另有独立的 `pnpm check`（`scripts/check-packages.mjs`，pre-commit 由 lefthook 触发）：不构建、全量校验各发布包静态契约，检测项在构建校验之外补充 `version` 格式（semver、无 `v` 前缀）、`displayName`/`description` 有 `default` 文案、`backends`/`frontends` 非空、`package.json` `name` 与目录名一致；警告不拦截、错误 exit 1。
+
+### 特性版本门槛记录
+
+以下特性对宿主思源版本有要求，来源是官方示例 `siyuan-note/plugin-sample` 的 README 与 `docs/PLUGIN-PUBLISH.md`。使用这些特性的包需要相应抬高 `minAppVersion`。目前 `pnpm check` 只强制第一条，其余仅记录、未实现检查：
+
+| 特性                                                                                  | 版本门槛                       | 检查状态              |
+| ------------------------------------------------------------------------------------- | ------------------------------ | --------------------- |
+| `publish.resources` **目录形式**（以 `/` 结尾的条目；文件形式无要求）                 | `3.8.6+`                       | ✅ 已实现（错误拦截） |
+| `settingsWindow: true`（桌面端独立设置窗口）                                          | `3.8.7+`                       | ✅ 已实现（错误拦截） |
+| 发布服务整体（`publish` / `disabledInPublish` 字段）                                  | `3.8.x` 引入（精确版本未查证） | 仅记录                |
+| `siyuan` SDK 的发布快照方法（loadPluginPublishData 等运行时行为；1.2.9 起有类型声明） | `3.8.4+`                       | 仅记录                |
+
+`minAppVersion` 本身非必填（缺省视为全版本适用），但使用上表特性的包必须声明且达到门槛；新增使用这些特性的字段前先核对本表，发现新的隐性版本要求时补充进表。
 
 产物目录随模式变化：production 写 `dist/`，development 写**包根**（`index.js`、`index.css`、`i18n/`、`plugin.json` 都是产物，已被 `.gitignore` 忽略）。这是为了让包目录能直接软链成思源插件目录。
 
