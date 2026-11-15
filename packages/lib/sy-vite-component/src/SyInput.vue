@@ -1,12 +1,7 @@
 <template>
-  <input
-    class="b3-text-field fn__flex-center fn__size200"
-    :value="modelValue"
-    @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    v-bind="$attrs" />
+  <input class="b3-text-field fn__flex-center fn__size200" v-model="model" v-bind="$attrs" />
 </template>
 
 <script setup lang="ts">
-defineProps(['modelValue']);
-defineEmits(['update:modelValue']);
+const model = defineModel<string>({ default: '' });
 </script>

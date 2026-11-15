@@ -1,12 +1,7 @@
 <template>
-  <input
-    class="b3-switch fn__flex-center"
-    type="checkbox"
-    :checked="modelValue"
-    @input="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)" />
+  <input class="b3-switch fn__flex-center" type="checkbox" v-model="model" />
 </template>
 
 <script setup lang="ts">
-defineProps(['modelValue']);
-defineEmits(['update:modelValue']);
+const model = defineModel<boolean>({ default: false });
 </script>
