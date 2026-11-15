@@ -1,4 +1,4 @@
-## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.2...sy-format-helper@0.7.2) (2026-11-15)
+## [0.7.3](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.2...sy-format-helper@0.7.3) (2026-11-15)
 
 ### ✨ Features | 功能
 
@@ -16,8 +16,9 @@
 - 无更新日志两包采用提交日志 ([35f294f](https://github.com/emptylight370/siyuan-packages/commit/35f294f136cb05d3841762ff18c07d3225b0ad28))
 - 统一提取通用依赖项 ([5082e02](https://github.com/emptylight370/siyuan-packages/commit/5082e02b1cf158fded8e8d8b908c64340a260df8))
 - js脚本迁移ts ([d6abd27](https://github.com/emptylight370/siyuan-packages/commit/d6abd272849478e6dda73d37dc736c3baec74aec))
+- 使icon和preview可选 ([438d05e](https://github.com/emptylight370/siyuan-packages/commit/438d05e9555ffabf5de86fed9db5702236371a73))
 
-## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.1...sy-format-helper@0.7.2) (2026-11-15)
+## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.1...sy-format-helper@0.7.2) (2026-11-14)
 
 ### ✨ Features | 功能
 
