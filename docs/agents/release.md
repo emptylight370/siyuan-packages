@@ -44,7 +44,7 @@ pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格�
 3. `pnpm --filter <pkg> build`，`TAG_VERSION` 传入以在构建期再校验一次版本。
 4. `git cliff --config <pkg>/cliff.toml --latest -o release.md` 生成 release notes。
 5. `jq-action` 读取**产物** `dist/plugin.json` 的 `version`，与 tag 版本比对；最终 `tag_name` 取自产物而非 tag，保证与集市读到的版本同源。
-6. `Sync metadata to target repo`：把 `dist/` 下的 `plugin.json`、`icon.png`、`preview.png` 提交并推送到目标仓库 `main`，使下一步以 `target_commitish: main` 创建的 tag 指向这份含元数据的提交（checkout tag 即可看到完整元数据与图标）。带 `continue-on-error: true`，失败只告警不影响发布；`git status --porcelain` 为空时跳过提交；提交身份取仓库变量 `vars.COMMIT_NAME` / `vars.COMMIT_EMAIL`。
+6. `Sync metadata to target repo`：把 `dist/` 下的 `plugin.json` 与可选的 `icon.png` / `preview.png`（产物里有才复制，上游已删除则同步移除目标仓库旧图）提交并推送到目标仓库 `main`，使下一步以 `target_commitish: main` 创建的 tag 指向这份含元数据的提交（checkout tag 即可看到完整元数据与图标）。提交用 `git add -A` 以覆盖图片删除场景。带 `continue-on-error: true`，失败只告警不影响发布；`git status --porcelain` 为空时跳过提交；提交身份取仓库变量 `vars.COMMIT_NAME` / `vars.COMMIT_EMAIL`。
 7. `softprops/action-gh-release` 通过 `repository: <owner>/<pkg>` + `token: secrets.RELEASE_TOKEN` 发布到独立仓库，`target_commitish: main`，`fail_on_unmatched_files: true`。
 
 子仓库的 tag 是**裸版本号**（`0.7.1`），不给 `v` 前缀也不带包名；monorepo 的 tag 才是 `<pkg>@<version>`。跨仓发布必须用 PAT 或 GitHub App token（`GITHUB_TOKEN` 只能作用于本仓库），且目标仓库必须已有 `main` 分支（stub 初始化）。

@@ -116,7 +116,15 @@ jobs:
         run: |
           dir="${{ steps.meta.outputs.dir }}"
           git clone --depth=1 "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/${{ steps.meta.outputs.owner }}/${{ steps.meta.outputs.name }}.git" target
-          cp "$dir/dist/plugin.json" "$dir/dist/icon.png" "$dir/dist/preview.png" target/
+          cp "$dir/dist/plugin.json" target/
+          # icon/preview 为可选资源：产物里有才复制，上游已删除则同步移除目标仓库中的旧图
+          for img in icon.png preview.png; do
+            if [ -f "$dir/dist/$img" ]; then
+              cp "$dir/dist/$img" target/
+            else
+              rm -f "target/$img"
+            fi
+          done
           cd target
           git config user.name "${{ vars.COMMIT_NAME }}"
           git config user.email "${{ vars.COMMIT_EMAIL }}"
@@ -125,7 +133,8 @@ jobs:
             echo "元数据无变化，无需提交"
             exit 0
           fi
-          git add plugin.json icon.png preview.png
+          # -A 以覆盖图片被删除的场景（git add 缺失路径会报错）
+          git add -A
           git commit -m "chore(version): release ${{ steps.packaged.outputs.result }}"
           git push
 
