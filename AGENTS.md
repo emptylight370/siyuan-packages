@@ -36,7 +36,7 @@ pnpm --filter ./packages/plugin/sy-format-helper build    # 根目录，按目�
 cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 ```
 
-产物位置按模式区分。构建实现分两类：esbuild 包走 `scripts/build-plugin.mjs`（包内脚本只做转发），vite 包保留包内 `vite.config.ts`；两类构建的元数据合成统一由 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件：
+产物位置按模式区分。构建实现分两类：esbuild 包走 `scripts/build-plugin.mjs`（包内脚本只做转发），vite 包的 `vite.config.ts` 转发到 `scripts/vite-plugin-config.mjs` 的 `createPluginViteConfig()`（公共编排，包内只传 `import.meta.dirname` 与 `deps`——scripts/ 解析不到包内 devDependencies，vite 辅助与插件实例必须由包内传入）；两类构建的元数据合成统一由 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件：
 
 | 模式              | 命令                                                                | 产物                                                 |
 | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -243,7 +243,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 1. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`），不要提交 `plugin.json`（构建产物）；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 2. 构建接入：
    - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
-   - **vite 包**：保留包内 `vite.config.ts`，把模板的 `pluginInfo = require("./plugin.json")` 换成 `resolvePluginMeta({ pkgDir: __dirname })` 并注册 `emitPluginJson` 插件输出 `plugin.json`；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与 `../../../bazaar.json`；`tsconfig.json` 继承 `../../../tsconfig.base.json`
+   - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, loadEnv, vue, fg, minimist, livereload, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见「changelog 配置」）
 5. `.mise/tasks/changelog.ps1`（复制现有包；不需生成的包也要**空任务占位**，否则 pre-commit 会失败）
