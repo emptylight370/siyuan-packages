@@ -1,7 +1,6 @@
 {
   "version": "0.0.1",
   "minAppVersion": "3.4.1",
-  "frontends": ["all"],
   "displayName": {
     "default": "Ignore files Editor",
     "zh-CN": "忽略文件编辑器"

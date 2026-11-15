@@ -1,7 +1,6 @@
 {
   "version": "0.0.1",
   "minAppVersion": "3.4.1",
-  "frontends": ["all"],
   "displayName": {
     "default": "VSCode Lite Edit"
   },

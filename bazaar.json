@@ -4,6 +4,7 @@
     "plugin": {
       "author": "Emptylight",
       "backends": ["all"],
+      "frontends": ["all"],
       "disabledInPublish": false,
       "icon": "icon.png",
       "preview": "preview.png",
