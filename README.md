@@ -24,6 +24,22 @@
 
 发布仓库：[emptylight370/siyuan-ignoreeditor](https://github.com/emptylight370/siyuan-ignoreeditor/releases)
 
+### siyuan-ttf-Alibaba_PuHui_Sans
+
+[阿里巴巴普惠体](packages/plugin/siyuan-ttf-Alibaba_PuHui_Sans/)
+
+说明文档：[简体中文](packages/plugin/siyuan-ttf-Alibaba_PuHui_Sans/README.zh-CN.md) | [English](packages/plugin/siyuan-ttf-Alibaba_PuHui_Sans/README.md)
+
+发布仓库：[emptylight370/siyuan-ttf-Alibaba_PuHui_Sans](https://github.com/emptylight370/siyuan-ttf-Alibaba_PuHui_Sans/releases)
+
+### siyuan-ttf-Noto_Sans
+
+[Noto Sans](packages/plugin/siyuan-ttf-Noto_Sans/)
+
+说明文档：[简体中文](packages/plugin/siyuan-ttf-Noto_Sans/README.zh-CN.md) | [English](packages/plugin/siyuan-ttf-Noto_Sans/README.md)
+
+发布仓库：[emptylight370/siyuan-ttf-Noto_Sans](https://github.com/emptylight370/siyuan-ttf-Noto_Sans/releases)
+
 ### sy-format-helper
 
 [格式助手](packages/plugin/sy-format-helper/)
