@@ -10,6 +10,6 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
-    "vue": "^3.5.45"
+    "vue": "catalog:"
   }
 }
