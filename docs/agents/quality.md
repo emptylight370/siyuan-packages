@@ -28,7 +28,7 @@ lint 已从 ESLint 迁到 **oxlint**，配置在根 `.oxlintrc.json`：
 
 不进 base 的项：`paths`（各包别名不同）、`types`（vite 包需要 `vite/client`）、`jsx` / `allowJs` / `checkJs`（Vue 工程特有）、`noEmit`（`tsconfig.node.json` 的 `composite` 需要 emit）、`noUnusedLocals` / `noUnusedParameters`（严格度选项）。
 
-esbuild 的产物语法目标在 `scripts/build-plugin.ts` 里单独设为 `chrome95`，与 tsconfig 的 `target` 相互独立。
+esbuild 的产物语法目标在 `scripts/build-plugin.ts` 里从包内 `tsconfig.json` 沿 `extends` 链解析 `compilerOptions.target` 得出（当前基线 `ES2022`），与 tsconfig 单一来源、不会漂移。
 
 类型检查**不在**质量门禁内（`pnpm lint` 只跑 oxlint，不读 tsconfig），需要时手动执行 `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json`；含 `.vue` 的包需要 `vue-tsc` 才能覆盖 SFC 内部（当前靠 `*.vue` 声明文件绕过了那部分）。根 `pnpm typecheck` 只覆盖 `scripts/*.ts`（构建脚本自身的类型检查）。
 

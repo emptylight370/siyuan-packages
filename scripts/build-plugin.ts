@@ -115,6 +115,32 @@ async function readLicense() {
     }
 }
 
+// esbuild 语法目标与 tsconfig 对齐：从包内 tsconfig.json 沿 extends 链解析 compilerOptions.target
+// （ES2022 → es2022、ESNext → esnext，esbuild 接受小写形式），单一来源避免两处漂移
+async function resolveEsbuildTarget(): Promise<string> {
+    let file = path.join(pkgDir, 'tsconfig.json');
+    for (let depth = 0; depth < 5; depth += 1) {
+        if (await exists(file)) {
+            const config = JSON.parse(await fs.readFile(file, 'utf8')) as {
+                compilerOptions?: { target?: string };
+                extends?: string;
+            };
+            const target = config.compilerOptions?.target;
+            if (target) {
+                return target.toLowerCase();
+            }
+            if (!config.extends) {
+                break;
+            }
+            // extends 指向相对路径且含文件名（如 ../../../tsconfig.base.json）
+            file = path.resolve(path.dirname(file), config.extends);
+            continue;
+        }
+        file = path.join(path.dirname(file), '..', path.basename(file));
+    }
+    throw new Error('无法从 tsconfig 解析 compilerOptions.target，esbuild 语法目标未知');
+}
+
 // LICENSE 必须包成 /*! ... */ 块注释（与官方 plugin-sample 产物一致）：裸文本会让产物
 // 成为非法 JS（Node require 直接语法错误），且 CSS 产物也需要同样的声明；
 // 内容中的 */ 转义为 * / 防止注释提前闭合
@@ -200,8 +226,8 @@ async function main() {
         outfile: path.join(outDir, 'index.js'),
         bundle: true,
         format: 'cjs',
-        // 思源桌面端用 latest-2 的 Electron，移动端 webview 最低 Chrome 95，产物语法按此目标保留
-        target: 'chrome95',
+        // 语法目标与 tsconfig 的 target 对齐（当前基线 ES2022），类型层与产物层单一来源
+        target: await resolveEsbuildTarget(),
         platform: 'browser',
         // siyuan 为运行时依赖；'../plugins/*' 让 CSS 里引用思源插件挂载路径（如 loadPetals 注入样式
         // 中 ../plugins/<pkg>/fonts/ 的字体）的 url() 保持原样输出，不在构建期解析或打包。
