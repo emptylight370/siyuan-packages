@@ -1,2 +1,10 @@
+# dev 运行目录等由本地 .env 提供（VITE_SIYUAN_WORKSPACE_PATH / VITE_DEV_DIST_DIR，未入库），
+# mise 通过 _.file 一并加载；文件不存在时静默跳过
 [env]
 _.file = [".env"]
+
+# changelog 逻辑唯一实现在根文件任务 //:changelog（.mise/tasks/changelog.ps1，dir={{cwd}}）；
+# 本包沿用 whatschange.md、无历史存档
+[tasks.changelog]
+run = "mise run //:changelog"
+env = { CHANGELOG_OUTPUT = "whatschange.md" }

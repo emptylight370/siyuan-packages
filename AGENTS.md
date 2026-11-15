@@ -151,14 +151,14 @@ esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chr
 
 ### 本地发布任务
 
-包内 `.mise/tasks/` 提供两个 PowerShell 任务。脚本用 `Get-Location` 定位包目录，monorepo 模式下 mise 把任务执行目录设为所属包目录，因此从根目录 `mise run //packages/plugin/<pkg>:<task>` 也能正确运行；包目录内裸名 `mise run <task>` 与 `mise -C` 形式同样可用：
+包级任务的声明方式分两类。monorepo 模式下 mise 把任务执行目录设为所属包目录，因此从根目录 `mise run //packages/plugin/<pkg>:<task>` 也能正确运行；包目录内裸名 `mise run <task>` 与 `mise -C` 形式同样可用：
 
-| 任务        | 作用                                                                                                                                                                                                          |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `changelog` | 读 `meta.json` 版本 → `git cliff -t "<pkg>@<version>" -o whatschange.md` 全量重写 → 追加 `whatschange.old.md` 历史存档 → `prettier -w` → `git add`                                                            |
-| `release`   | 依次校验 `package.json` 与 `meta.json` 版本一致、工作区干净、当前在 `main`、本地与 `origin/main` 同步、本地/远端无同名 tag、`whatschange.md` 已含该版本段落，最后 `git tag -a "<pkg>@<version>" -m ''` 并推送 |
+| 任务        | 声明位置                                                                                                                                                        | 作用                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `changelog` | 根 `.mise/tasks/changelog.ps1`（文件任务 `//:changelog`，`#MISE dir="{{cwd}}"`）；各包 `mise.toml` 声明 `[tasks.changelog] run = "mise run //:changelog"` + env | 共享逻辑唯一实现：读 `meta.json` 版本 → `git cliff -t "<pkg>@<version>" -o <输出文件>` 全量重写 → 追加旧日志存档（如提供）→ `prettier -w` → `git add`。输出文件名（env `CHANGELOG_OUTPUT`）与旧日志文件名（env `CHANGELOG_LEGACY`，空 = 跳过存档）不用脚本参数，由包内 `env` 静态声明；子任务 env 随嵌套 `mise run` 按普通子进程继承（2026.11.8 实测），`dir="{{cwd}}"` 使执行目录 = 嵌套调用发起处（包目录） |
+| `release`   | `sy-format-helper` 的 `.mise/tasks/release.ps1`（file 任务）                                                                                                    | 依次校验 `package.json` 与 `meta.json` 版本一致、工作区干净、当前在 `main`、本地与 `origin/main` 同步、本地/远端无同名 tag、`whatschange.md` 已含该版本段落，最后 `git tag -a "<pkg>@<version>" -m ''` 并推送                                                                                                                                                                                                 |
 
-根 `.mise/tasks/` 提供两个跨包任务：
+根 `.mise/tasks/` 另提供两个跨包任务：
 
 | 任务     | 用法                                                      | 作用                                                                                                                                                      |
 | -------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -169,7 +169,7 @@ esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chr
 
 发布顺序：改 `meta.json` 的版本 → 提交（pre-commit 自动同步 `package.json` 并生成 changelog）→ 推送 `main` → `mise run tag` → 推送 tag 触发 CI。
 
-**每个包都必须有 `changelog` 任务**：根 `.lefthook/pre-commit/changelog.ps1` 通过 `mise -C <pkg> run changelog` 调用它，缺任务会让提交失败（`mise ERROR no task //packages/plugin/<pkg>:changelog found`）。不需要生成 changelog 的包（如纯资源包）必须创建一个**空任务占位**——`.mise/tasks/changelog.ps1` 内容可以只有一行注释，保证任务能被 mise 识别即可。
+**每个包都必须有 `changelog` 任务**：根 `.lefthook/pre-commit/changelog.ps1` 通过 `mise -C <pkg> run changelog` 调用它，缺任务会让提交失败（`mise ERROR no task //packages/plugin/<pkg>:changelog found`）。插件包在包内 `mise.toml` 声明 `[tasks.changelog] run = "mise run //:changelog"`（逻辑唯一实现在根文件任务，不要逐包复制脚本；输出/旧日志文件名用 env `CHANGELOG_OUTPUT` / `CHANGELOG_LEGACY` 声明）；不需生成 changelog 的包（如内部 lib）用 `[tasks.changelog] run = ""` 占位即可。
 
 pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格式化结果）和 `syncversion.ps1`（把 `meta.json` 的 version 写回 `package.json` 并单独 `git add`）。三者都会改动暂存区，若偶发 `index.lock` 冲突可把 `pre-commit.parallel` 改为 `false`。
 
@@ -248,7 +248,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
    - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, loadEnv, vue, fg, minimist, livereload, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见「changelog 配置」）
-5. `.mise/tasks/changelog.ps1`（复制现有包；不需生成的包也要**空任务占位**，否则 pre-commit 会失败）
+5. 包内 `mise.toml` 声明 `[tasks.changelog] run = "mise run //:changelog"`（输出/旧日志文件名非缺省时加 `env = { CHANGELOG_OUTPUT = "...", CHANGELOG_LEGACY = "..." }`；内部 lib / 不需生成的包写 `[tasks.changelog] run = ""` 占位，否则 pre-commit 会失败）
 6. 补包内 `AGENTS.md`：构建栈、模块职责、i18n 命名、隐性约定
 7. 验证：根 `pnpm install` → `pnpm -r build` → `pnpm lint` → `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json` → `mise run //packages/plugin/<pkg>:changelog`（包目录内亦可 `mise run changelog`）；确认 `dist/plugin.json` 的 `name` / `url` / `version` 为派生值。新包落在 `config_roots` glob 内，其 scripts 与任务会自动出现在根目录 `mise tasks --all`
 8. 发布：初始化目标仓库 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支，`mise run tag` 后推送 tag

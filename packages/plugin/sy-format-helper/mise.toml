@@ -1,0 +1,5 @@
+# changelog 逻辑唯一实现在根文件任务 //:changelog（.mise/tasks/changelog.ps1，dir={{cwd}}）；
+# 本包沿用 whatschange.md 并追加历史存档
+[tasks.changelog]
+run = "mise run //:changelog"
+env = { CHANGELOG_OUTPUT = "whatschange.md", CHANGELOG_LEGACY = "whatschange.old.md" }

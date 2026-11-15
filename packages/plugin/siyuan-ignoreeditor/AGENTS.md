@@ -4,14 +4,15 @@
 
 ## 常用命令
 
-| 命令                                                        | 说明                                                                                            |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `pnpm install`（仓库根）                                    | 安装全部 workspace 依赖                                                                         |
-| `pnpm --filter siyuan-ignoreeditor build`                   | 生产构建，产出 `dist/` 与 `package.zip`                                                         |
-| `pnpm --filter siyuan-ignoreeditor dev`                     | vite watch，输出到 `VITE_SIYUAN_WORKSPACE_PATH` 指向的插件目录                                  |
-| `mise run //packages/plugin/siyuan-ignoreeditor:build`      | 上述 build 的 mise 任务形式（别名 `node:siyuan-ignoreeditor#build`；`dev`/`clean`/`lint` 同理） |
-| `mise run deploy -- -package siyuan-ignoreeditor`           | 构建并把 `dist/` 镜像同步到 `data/plugins/siyuan-ignoreeditor`                                  |
-| `mise -C packages/plugin/siyuan-ignoreeditor run changelog` | 由 git-cliff 生成 `whatschange.md`                                                              |
+| 命令                                                        | 说明                                                                                                     |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `pnpm install`（仓库根）                                    | 安装全部 workspace 依赖                                                                                  |
+| `pnpm --filter siyuan-ignoreeditor build`                   | 生产构建，产出 `dist/` 与 `package.zip`                                                                  |
+| `pnpm --filter siyuan-ignoreeditor dev`                     | vite watch，输出到 `VITE_SIYUAN_WORKSPACE_PATH` 指向的插件目录                                           |
+| `mise run //packages/plugin/siyuan-ignoreeditor:build`      | 上述 build 的 mise 任务形式（别名 `node:siyuan-ignoreeditor#build`；`dev`/`clean`/`lint` 同理）          |
+| 包内 `mise.toml` 的 `[env] _.file = [".env"]`               | 加载本地 `.env`（未入库）中的 `VITE_SIYUAN_WORKSPACE_PATH` / `VITE_DEV_DIST_DIR`，dev 输出目录即由此决定 |
+| `mise run deploy -- -package siyuan-ignoreeditor`           | 构建并把 `dist/` 镜像同步到 `data/plugins/siyuan-ignoreeditor`                                           |
+| `mise -C packages/plugin/siyuan-ignoreeditor run changelog` | 由 git-cliff 生成 `whatschange.md`                                                                       |
 
 ## 架构
 
