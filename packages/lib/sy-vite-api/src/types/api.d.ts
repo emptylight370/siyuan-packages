@@ -1,3 +1,6 @@
+// api.ts 各函数返回值的 ambient 全局接口声明（vite-vue 模板原样保留，不改为具名导出）。
+// 其引用的 NotebookId / Notebook / NotebookConf / doOperation / Block / BlockType / BlockSubType
+// 等基础类型目前仍是各插件包 src/types/index.d.ts 的全局声明，由消费方工程提供。
 interface IResGetNotebookConf {
     box: string;
     conf: NotebookConf;

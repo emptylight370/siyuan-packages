@@ -6,8 +6,8 @@
   "scripts": {
     "build": "pnpm -r build",
     "clean": "pnpm -r clean",
-    "lint": "oxlint packages/plugin",
-    "lint:fix": "oxlint packages/plugin --fix",
+    "lint": "oxlint packages",
+    "lint:fix": "oxlint packages --fix",
     "format": "prettier -w ."
   },
   "devEngines": {

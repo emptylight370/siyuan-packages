@@ -24,6 +24,12 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  packages/lib/sy-vite-api:
+    devDependencies:
+      siyuan:
+        specifier: ^1.3.0
+        version: 1.3.0
+
   packages/plugin/plugin-vscodelite-edit:
     devDependencies:
       '@vitejs/plugin-vue':
@@ -77,6 +83,9 @@ importers:
       siyuan:
         specifier: ^1.3.0
         version: 1.3.0
+      sy-vite-api:
+        specifier: workspace:*
+        version: link:../../lib/sy-vite-api
       vite:
         specifier: ^8.3.6
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.108.2)(yaml@2.9.1)

@@ -76,6 +76,8 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 `packages/<type>/<pkg>/`，目前只有 `type = plugin`。**包目录名同时是插件名、构建产物元数据的 `name`、目标发布仓库名**，改名会同时影响集市、发布仓库与构建派生字段。
 
+另有 `packages/lib/<pkg>/` 存放**内部共享 lib**（当前 `sy-vite-api`——源自 vite-vue 模板的思源 API 封装；`sy-format-helper` 的 `src/api.ts` 是另一套业务实现，勿混淆）：不发布集市，无 `meta.json` / `cliff.toml`，以 `workspace:*` 声明并**源码级打进插件产物**（无需 build/clean 脚本，`pnpm -r` 自动跳过）；changelog 任务只需空占位。lib 的 `IRes*` 返回类型是 ambient 全局声明，引用的 `NotebookId`/`Notebook`/`Block` 等基础类型仍由插件包 `src/types/index.d.ts` 提供，因此 lib 不做独立 tsc 检查，由消费方工程覆盖（基础类型后续抽取进 lib 后可独立化）。
+
 ### 元数据三层模型（最需要注意的部分）
 
 完整元数据不再以源文件形式存在，而是构建时合成：
@@ -102,7 +104,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 ### 工具链分层
 
-- **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*"]`），各包的 pnpm scripts 与 `.mise/tasks/` 因此都出现在根目录的 `mise tasks --all` 里；node 脚本导入由根 `mise.toml` 的 `[settings] task.auto_infer = ["node"]` 启用。该特性在 mise 文档中标注为 experimental，但实测（当前版本）`experimental = false` 时导入照常工作、不报错，CI 的 mise-action 默认值下无需额外开关。
+- **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*", "packages/lib/*"]`），各包的 pnpm scripts 与 `.mise/tasks/` 因此都出现在根目录的 `mise tasks --all` 里；node 脚本导入由根 `mise.toml` 的 `[settings] task.auto_infer = ["node"]` 启用。该特性在 mise 文档中标注为 experimental，但实测（当前版本）`experimental = false` 时导入照常工作、不报错，CI 的 mise-action 默认值下无需额外开关。
 - **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）与类型包（@types/*），脚本是 workspace 级聚合。
 - **包内 `package.json`** 只放构建链（esbuild、sass、jszip、rimraf）与 `siyuan` 类型；`prettier` 不装（mise 提供，避免双版本漂移）。
 - 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`.oxlintrc.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。

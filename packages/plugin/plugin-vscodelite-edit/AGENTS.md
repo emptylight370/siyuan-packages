@@ -29,18 +29,18 @@
 
 ### 模块结构
 
-| 路径                   | 职责                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `src/index.ts`         | 插件入口，继承 `Plugin`，负责平台标记与生命周期                                                   |
-| `src/main.ts`          | Vue 初始化：`init(plugin)` 建容器并挂载，`destroy()` 卸载，`usePlugin()` 单例取当前实例           |
-| `src/api.ts`           | 思源 API 封装（`fetchSyncPost`），覆盖笔记本、文件树、块、属性、SQL、模板、导出、通知、网络、系统 |
-| `src/utils/index.ts`   | `getDomByVueComponent(component)`，把 Vue 组件挂成 DOM                                            |
-| `src/types/index.d.ts` | 思源类型（`BlockId`、`NotebookId`、`Block` 等）与 `Window` 接口扩展                               |
-| `src/types/vue.d.ts`   | `*.vue` 模块声明，供 `tsc` 检查                                                                   |
-| `src/env.d.ts`         | `*.scss` 模块声明                                                                                 |
-| `src/App.vue`          | 根组件（SiyuanTheme 选择器、菜单构建、块菜单处理）                                                |
-| `src/components/`      | 按功能拆分的 Vue 组件，含 `SiyuanTheme/` 下的基础控件                                             |
-| `src/i18n/`            | `en_US.json`、`zh_CN.json`（**下划线**命名，与 `plugin.json` 里的 `zh-CN` 键名不同）              |
+| 路径                   | 职责                                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/index.ts`         | 插件入口，继承 `Plugin`，负责平台标记与生命周期                                                                                        |
+| `src/main.ts`          | Vue 初始化：`init(plugin)` 建容器并挂载，`destroy()` 卸载，`usePlugin()` 单例取当前实例                                                |
+| ~~`src/api.ts`~~       | 已删除：模板自带的思源 API 封装在本包是**死代码**（无任何调用点）；需要思源 API 时引入 `sy-vite-api` lib（`packages/lib/sy-vite-api`） |
+| `src/utils/index.ts`   | `getDomByVueComponent(component)`，把 Vue 组件挂成 DOM                                                                                 |
+| `src/types/index.d.ts` | 思源类型（`BlockId`、`NotebookId`、`Block` 等）与 `Window` 接口扩展                                                                    |
+| `src/types/vue.d.ts`   | `*.vue` 模块声明，供 `tsc` 检查                                                                                                        |
+| `src/env.d.ts`         | `*.scss` 模块声明                                                                                                                      |
+| `src/App.vue`          | 根组件（SiyuanTheme 选择器、菜单构建、块菜单处理）                                                                                     |
+| `src/components/`      | 按功能拆分的 Vue 组件，含 `SiyuanTheme/` 下的基础控件                                                                                  |
+| `src/i18n/`            | `en_US.json`、`zh_CN.json`（**下划线**命名，与 `plugin.json` 里的 `zh-CN` 键名不同）                                                   |
 
 `plugin.json` **不是源文件**：由 `bazaar.json` 的 `types.plugin` 与包内 `meta.json` 经 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 合成，再由 `vite.config.ts` 的 `emitPluginJson` 插件写入 `dist/`。
 

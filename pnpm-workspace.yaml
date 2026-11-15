@@ -1,6 +1,7 @@
 pmOnFail: ignore
 packages:
   - packages/plugin/*
+  - packages/lib/*
 allowBuilds:
   "@parcel/watcher": true
   esbuild: true

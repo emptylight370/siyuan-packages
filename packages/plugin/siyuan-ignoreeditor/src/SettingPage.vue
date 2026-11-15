@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { getFile, putFile } from '@/api';
+import { getFile, putFile } from 'sy-vite-api';
 import SyButton from '@/components/SiyuanTheme/SyButton.vue';
 import SyTextarea from '@/components/SiyuanTheme/SyTextarea.vue';
 import { usePlugin } from '@/main';

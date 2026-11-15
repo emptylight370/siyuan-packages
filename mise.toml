@@ -1,7 +1,7 @@
 monorepo_root = true
 
 [monorepo]
-config_roots = ["packages/plugin/*"]
+config_roots = ["packages/plugin/*", "packages/lib/*"]
 
 [tools]
 git-cliff = "latest"

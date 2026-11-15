@@ -2,6 +2,11 @@
  * Copyright (c) 2023 frostime. All rights reserved.
  * https://github.com/frostime/sy-plugin-template-vite
  *
+ * 【vite-vue 模板 API】本文件是 vite-vue 模板自带的思源 API 封装，monorepo 内由
+ * sy-ignoreeditor 与 plugin-vscodelite-edit 同源复制而来（曾逐字节一致），现抽到本 lib 共享。
+ * 注意：sy-format-helper 的 src/api.ts 是另一套独立演化的业务 API（transaction、格式转换链），
+ * 两者同源于早期模板但内容不同，不要互相合并。
+ *
  * See API Document in [API.md](https://github.com/siyuan-note/siyuan/blob/master/API.md)
  * API 文档见 [API_zh_CN.md](https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md)
  */
