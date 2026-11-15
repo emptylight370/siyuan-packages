@@ -52,6 +52,23 @@ declare global {
         name: string;
     }
 
+    interface IResGetRawFile {
+        /** 请求是否成功；ok 为 true 而 exists 为 false 表示文件不存在（等同空文件） */
+        ok: boolean;
+        /** 文件是否存在；读取失败时为 false */
+        exists: boolean;
+        /** 文件内容（裸文本）；文件不存在或读取失败时为空字符串 */
+        content: string;
+        /** 失败原因；成功时为 undefined */
+        message?: string;
+    }
+
+    interface IResPutRawFile {
+        ok: boolean;
+        /** 失败原因；成功时为 undefined */
+        message?: string;
+    }
+
     interface IResExportMdContent {
         hPath: string;
         content: string;

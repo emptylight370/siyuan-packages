@@ -54,10 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { getFile, putFile } from 'sy-api';
-import { SyButton, SyTextarea } from 'sy-vite-component';
+import { getRawFile, putRawFile, pushErrMsg } from 'sy-api';
+import { SyAttributeTextarea, SyButton } from 'sy-vite-component';
 import { usePlugin } from '@/main';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, type Ref } from 'vue';
 
 const plugin = usePlugin();
 const ignoreindex = ref('');
@@ -77,53 +77,57 @@ onMounted(async () => {
   }
 });
 
-async function loadIgnoreIndex() {
-  const res = await getFile('/data/.siyuan/indexignore');
-  if (res) {
-    ignoreindex.value = res;
+// 内核对同步类忽略文件不剥 BOM，带 BOM 时第一条规则会失效，因此读入后统一去掉、保存时不写回
+const stripBom = (text: string) => (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
+const normalizeText = (text: string) => stripBom(text).replace(/\r\n?/g, '\n');
+
+async function loadIgnoreFile(path: string, target: Ref<string>) {
+  const res = await getRawFile(path);
+  if (res.ok) {
+    // 读取失败时绝不写入 target，避免用户把真实内容覆盖成空
+    target.value = normalizeText(res.content);
+  } else {
+    pushErrMsg(`Load ${path} failed: ${res.message}`);
   }
 }
 
-async function saveIgnoreIndex() {
-  const blob = new Blob([ignoreindex.value], { type: 'text/plain' });
-  await putFile('/data/.siyuan/indexignore', false, blob);
-}
-
-async function loadSearchIgnore() {
-  const res = await getFile('/data/.siyuan/searchignore');
-  if (res) {
-    searchignore.value = res;
+async function saveIgnoreFile(path: string, source: Ref<string>) {
+  const res = await putRawFile(path, stripBom(source.value));
+  if (!res.ok) {
+    pushErrMsg(`Save ${path} failed: ${res.message}`);
   }
 }
 
-async function saveSearchIgnore() {
-  const blob = new Blob([searchignore.value], { type: 'text/plain' });
-  await putFile('/data/.siyuan/searchignore', false, blob);
+function loadIgnoreIndex() {
+  return loadIgnoreFile('/data/.siyuan/indexignore', ignoreindex);
 }
 
-async function loadRefsearchIgnore() {
-  const res = await getFile('/data/.siyuan/refsearchignore');
-  console.log('refsearchignore', res);
-  if (res) {
-    refsearchignore.value = res;
-  }
+function saveIgnoreIndex() {
+  return saveIgnoreFile('/data/.siyuan/indexignore', ignoreindex);
 }
 
-async function saveRefsearchIgnore() {
-  const blob = new Blob([refsearchignore.value], { type: 'text/plain' });
-  await putFile('/data/.siyuan/refsearchignore', false, blob);
+function loadSearchIgnore() {
+  return loadIgnoreFile('/data/.siyuan/searchignore', searchignore);
 }
 
-async function loadSyncIgnore() {
-  const res = await getFile('/data/.siyuan/syncignore');
-  if (res) {
-    syncignore.value = res;
-  }
+function saveSearchIgnore() {
+  return saveIgnoreFile('/data/.siyuan/searchignore', searchignore);
 }
 
-async function saveSyncIgnore() {
-  const blob = new Blob([syncignore.value], { type: 'text/plain' });
-  await putFile('/data/.siyuan/syncignore', false, blob);
+function loadRefsearchIgnore() {
+  return loadIgnoreFile('/data/.siyuan/refsearchignore', refsearchignore);
+}
+
+function saveRefsearchIgnore() {
+  return saveIgnoreFile('/data/.siyuan/refsearchignore', refsearchignore);
+}
+
+function loadSyncIgnore() {
+  return loadIgnoreFile('/data/.siyuan/syncignore', syncignore);
+}
+
+function saveSyncIgnore() {
+  return saveIgnoreFile('/data/.siyuan/syncignore', syncignore);
 }
 
 const closeSetting = () => {

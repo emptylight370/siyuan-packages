@@ -360,6 +360,63 @@ export async function putFile(path: string, isDir: boolean, file: any) {
     return request(url, form);
 }
 
+// 读纯文本文件（如 data/.siyuan/ 下的各忽略文件）。/api/file/getFile 成功（HTTP 200）时
+// 返回裸文本而非 JSON，失败（HTTP 202）时响应体才是 {code, msg} 错误体，因此不能走
+// fetchSyncPost（它把响应体直接按 JSON 解析，读纯文本必然抛错），只能用裸 fetch。
+// 文件不存在（code 404）不是错误，视作空文件返回。
+export async function getRawFile(path: string): Promise<IResGetRawFile> {
+    try {
+        const response = await fetch('/api/file/getFile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: path }),
+        });
+        if (response.status === 202) {
+            let body: { code?: number; msg?: string } | undefined;
+            try {
+                body = await response.json();
+            } catch {
+                // 响应体不是 JSON，退回状态码
+            }
+            if (body?.code === 404) {
+                return { ok: true, exists: false, content: '' };
+            }
+            return { ok: false, exists: false, content: '', message: body?.msg || `HTTP ${response.status}` };
+        }
+        if (!response.ok) {
+            return { ok: false, exists: false, content: '', message: `HTTP ${response.status} ${response.statusText}` };
+        }
+        return { ok: true, exists: true, content: await response.text() };
+    } catch (error) {
+        return { ok: false, exists: false, content: '', message: String(error) };
+    }
+}
+
+// 写纯文本文件，与 getRawFile 配套。putFile 的响应体是 JSON，这里用裸 fetch 并校验
+// code === 0（putFile 不检查返回值，保存失败会静默），内容以 UTF-8 Blob 写入并带文件名。
+export async function putRawFile(path: string, text: string): Promise<IResPutRawFile> {
+    const form = new FormData();
+    form.append('path', path);
+    form.append('isDir', 'false');
+    form.append('modTime', Math.floor(Date.now() / 1000).toString());
+    form.append('file', new Blob([text], { type: 'text/plain;charset=utf-8' }), path.split('/').pop());
+    try {
+        const response = await fetch('/api/file/putFile', { method: 'POST', body: form });
+        let body: { code?: number; msg?: string } | undefined;
+        try {
+            body = await response.json();
+        } catch {
+            // 响应体不是 JSON，退回状态码
+        }
+        if (!response.ok || body?.code !== 0) {
+            return { ok: false, message: body?.msg || `HTTP ${response.status}` };
+        }
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, message: String(error) };
+    }
+}
+
 export async function removeFile(path: string) {
     const data = {
         path: path,
