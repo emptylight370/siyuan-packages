@@ -1,4 +1,4 @@
-## [0.0.1](https://github.com/emptylight370/siyuan-packages/compare/8cf5ea5e981a491fa45c4c4e001a17d66bab2d68...siyuan-ignoreeditor@0.0.1) (2026-11-15)
+## [0.1.0](https://github.com/emptylight370/siyuan-packages/compare/8cf5ea5e981a491fa45c4c4e001a17d66bab2d68...siyuan-ignoreeditor@0.1.0) (2026-11-15)
 
 ### ✨ Features | 功能
 
@@ -18,10 +18,12 @@
 - 补全AGENTS.md ([62d76dc](https://github.com/emptylight370/siyuan-packages/commit/62d76dcf0d5585fec87e7d55cf7bed52a2dc48e6))
 - 更新文档并修复问题 ([9f4d4a6](https://github.com/emptylight370/siyuan-packages/commit/9f4d4a611e393cb5a29a18fe62ceaa45c2d77477))
 - 添加支持忽略文件类型的说明 ([cfe2349](https://github.com/emptylight370/siyuan-packages/commit/cfe23490d90cad563f9c7900d6b9684dcd5c4298))
+- 更新说明文档 ([a6fcb9a](https://github.com/emptylight370/siyuan-packages/commit/a6fcb9a28da8e47d10b8084543263a4e5b40ecab))
 
 ### 🔨 Refactor | 重构
 
 - 提取vite中定义的思源风格控件为公用组件 ([2ccd001](https://github.com/emptylight370/siyuan-packages/commit/2ccd00158c03fd2602584ed9e3a68ab5f9c2263f))
+- 提取frontends为公共数据 ([8a962b0](https://github.com/emptylight370/siyuan-packages/commit/8a962b0b441c225ccf9b0c78c65262f942ec74de))
 
 ### 🛠️ Build system | 构建系统
 
