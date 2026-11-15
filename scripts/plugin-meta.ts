@@ -15,8 +15,10 @@ export interface PluginMeta {
     displayName: Record<string, string>;
     description: Record<string, string>;
     readme: Record<string, string>;
-    icon: string;
-    preview: string;
+    /** 非必填：集市不强制 icon，未声明则不校验资源存在 */
+    icon?: string;
+    /** 非必填：集市不强制 preview，未声明则不校验资源存在 */
+    preview?: string;
     disabledInPublish?: boolean;
     publish?: {
         resources?: string[];
@@ -58,6 +60,7 @@ interface BazaarFile {
 
 const RESERVED_KEYS = ['name', 'url'];
 // 集市不强制 minAppVersion（缺省视为全版本适用），故只推荐填写、不列入必填
+// icon / preview 同为非必填：集市规范不强制，声明了才校验资源存在
 const REQUIRED_FIELDS = [
     'name',
     'author',
@@ -68,8 +71,6 @@ const REQUIRED_FIELDS = [
     'displayName',
     'description',
     'readme',
-    'icon',
-    'preview',
 ];
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>

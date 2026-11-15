@@ -19,8 +19,11 @@
 ### 🔨 Refactor | 重构
 
 - 提取vite中定义的思源风格控件为公用组件 ([2ccd001](https://github.com/emptylight370/siyuan-packages/commit/2ccd00158c03fd2602584ed9e3a68ab5f9c2263f))
+- 提取frontends为公共数据 ([8a962b0](https://github.com/emptylight370/siyuan-packages/commit/8a962b0b441c225ccf9b0c78c65262f942ec74de))
 
 ### 🛠️ Build system | 构建系统
 
 - 提取changelog生成任务至统一路径 ([571fa01](https://github.com/emptylight370/siyuan-packages/commit/571fa0127a8c636ac5fafffefce2a311dde9cc34))
 - 无更新日志两包采用提交日志 ([35f294f](https://github.com/emptylight370/siyuan-packages/commit/35f294f136cb05d3841762ff18c07d3225b0ad28))
+- 统一提取通用依赖项 ([5082e02](https://github.com/emptylight370/siyuan-packages/commit/5082e02b1cf158fded8e8d8b908c64340a260df8))
+- js脚本迁移ts ([d6abd27](https://github.com/emptylight370/siyuan-packages/commit/d6abd272849478e6dda73d37dc736c3baec74aec))

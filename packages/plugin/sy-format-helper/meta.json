@@ -11,5 +11,7 @@
     "default": "Format the text block",
     "zh-CN": "格式化文本块"
   },
-  "keywords": []
+  "keywords": [],
+  "icon": "icon.png",
+  "preview": "preview.png"
 }

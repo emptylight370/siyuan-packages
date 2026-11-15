@@ -1,6 +1,7 @@
 // vite 插件包共用的 vite 配置工厂（vite-vue 模板包共用，包内 vite.config.ts 只保留 pkgDir 与差异项）。
 // 注意：本文件位于 scripts/，pnpm 隔离的 node_modules 解析不到包内 devDependencies，
 // 因此 vite 辅助函数（defineConfig/loadEnv）与插件实例必须由包内传入（deps），这里只做编排。
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
@@ -93,20 +94,19 @@ export function createPluginViteConfig({
 
             plugins: [
                 vue(),
+                // icon/preview 为可选资源，按包内是否存在过滤（与 esbuild 版 copyAssets 行为一致）
                 viteStaticCopy({
                     targets: [
                         {
                             src: './README*.md',
                             dest: './',
                         },
-                        {
-                            src: './icon.png',
-                            dest: './',
-                        },
-                        {
-                            src: './preview.png',
-                            dest: './',
-                        },
+                        ...['icon.png', 'preview.png']
+                            .filter((name) => existsSync(resolve(pkgDir, name)))
+                            .map((name) => ({
+                                src: `./${name}`,
+                                dest: './',
+                            })),
                         {
                             src: './src/i18n/**',
                             dest: './i18n/',

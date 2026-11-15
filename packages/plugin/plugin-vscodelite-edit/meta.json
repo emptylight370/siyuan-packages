@@ -8,5 +8,7 @@
     "default": "This is a plugin build for theme VSCode Lite Edit",
     "zh-CN": "这是一个为主题VSCode Lite Edit构建的插件"
   },
-  "keywords": ["VSCE", "VSCE主题", "VSCE theme"]
+  "keywords": ["VSCE", "VSCE主题", "VSCE theme"],
+  "icon": "icon.png",
+  "preview": "preview.png"
 }

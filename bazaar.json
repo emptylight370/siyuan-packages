@@ -6,8 +6,6 @@
       "backends": ["all"],
       "frontends": ["all"],
       "disabledInPublish": false,
-      "icon": "icon.png",
-      "preview": "preview.png",
       "readme": {
         "default": "README.md",
         "zh-CN": "README.zh-CN.md"

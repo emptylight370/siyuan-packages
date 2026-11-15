@@ -1,4 +1,23 @@
-## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.1...sy-format-helper@0.7.2) (2026-11-14)
+## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.2...sy-format-helper@0.7.2) (2026-11-15)
+
+### ✨ Features | 功能
+
+- 统一集中api调用为单一库方便复用 ([46c08ce](https://github.com/emptylight370/siyuan-packages/commit/46c08cef385e1d0f12df3f8efe15089aa8ad1cb4))
+
+### 📄 Documentation | 文档
+
+- 补全AGENTS.md ([62d76dc](https://github.com/emptylight370/siyuan-packages/commit/62d76dcf0d5585fec87e7d55cf7bed52a2dc48e6))
+- 更新文档并修复问题 ([9f4d4a6](https://github.com/emptylight370/siyuan-packages/commit/9f4d4a611e393cb5a29a18fe62ceaa45c2d77477))
+
+### 🛠️ Build system | 构建系统
+
+- 提取通用tsconfig ([15c76a3](https://github.com/emptylight370/siyuan-packages/commit/15c76a32b1b25ef9c3d0cc27b2b4830daeff7892))
+- 提取changelog生成任务至统一路径 ([571fa01](https://github.com/emptylight370/siyuan-packages/commit/571fa0127a8c636ac5fafffefce2a311dde9cc34))
+- 无更新日志两包采用提交日志 ([35f294f](https://github.com/emptylight370/siyuan-packages/commit/35f294f136cb05d3841762ff18c07d3225b0ad28))
+- 统一提取通用依赖项 ([5082e02](https://github.com/emptylight370/siyuan-packages/commit/5082e02b1cf158fded8e8d8b908c64340a260df8))
+- js脚本迁移ts ([d6abd27](https://github.com/emptylight370/siyuan-packages/commit/d6abd272849478e6dda73d37dc736c3baec74aec))
+
+## [0.7.2](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.1...sy-format-helper@0.7.2) (2026-11-15)
 
 ### ✨ Features | 功能
 

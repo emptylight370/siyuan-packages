@@ -49,7 +49,7 @@
 ### 构建要点
 
 - `vite.config.ts` 顶层 `await resolvePluginMeta({ pkgDir: __dirname })` 取合并后的元数据
-- `viteStaticCopy` 复制 `README*.md`、`icon.png`、`preview.png`、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
+- `viteStaticCopy` 复制 `README*.md`、`icon.png`（icon/preview 按存在与否过滤，本包无 `preview.png`）、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
 - 生产构建由 `vite-plugin-zip-pack` 打包 `dist/` 为 `package.zip`
 - 样式以内联进 `index.js` 为主；但 `SettingPage.vue` 的 scoped 样式块非空时，vite 会额外产出 `dist/index.css`（当前约 0.09 kB，思源会自动加载插件目录下的 `index.css`），不要再假设 `dist/` 里没有该文件
 - `siyuan` 依赖为 `^1.3.0`（与另两个包一致）

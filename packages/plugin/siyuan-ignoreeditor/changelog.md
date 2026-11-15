@@ -1,5 +1,9 @@
 ## [0.1.0](https://github.com/emptylight370/siyuan-packages/compare/siyuan-ignoreeditor@0.1.0...siyuan-ignoreeditor@0.1.0) (2026-11-15)
 
+### ✨ Features | 功能
+
+- 支持设置embeddingignore文件 ([b9ec6ed](https://github.com/emptylight370/siyuan-packages/commit/b9ec6ed5cb47e2a0c5b99734fc1ea9ca9840fdcf))
+
 ### 🛠️ Build system | 构建系统
 
 - 统一提取通用依赖项 ([5082e02](https://github.com/emptylight370/siyuan-packages/commit/5082e02b1cf158fded8e8d8b908c64340a260df8))
