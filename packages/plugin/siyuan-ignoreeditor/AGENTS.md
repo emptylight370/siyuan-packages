@@ -12,7 +12,7 @@
 | `mise run //packages/plugin/siyuan-ignoreeditor:build`      | 上述 build 的 mise 任务形式（别名 `node:siyuan-ignoreeditor#build`；`dev`/`clean`/`lint` 同理）          |
 | 包内 `mise.toml` 的 `[env] _.file = [".env"]`               | 加载本地 `.env`（未入库）中的 `VITE_SIYUAN_WORKSPACE_PATH` / `VITE_DEV_DIST_DIR`，dev 输出目录即由此决定 |
 | `mise run deploy -- -package siyuan-ignoreeditor`           | 构建并把 `dist/` 镜像同步到 `data/plugins/siyuan-ignoreeditor`                                           |
-| `mise -C packages/plugin/siyuan-ignoreeditor run changelog` | 由 git-cliff 生成 `whatschange.md`                                                                       |
+| `mise -C packages/plugin/siyuan-ignoreeditor run changelog` | 由 git-cliff 生成 `changelog.md`                                                                         |
 
 ## 架构
 

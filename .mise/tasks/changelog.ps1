@@ -15,18 +15,23 @@
 $pkgDir = Get-Location
 $meta = Get-Content (Join-Path $pkgDir 'meta.json') -Raw | ConvertFrom-Json
 $tag = "$(Split-Path -Leaf $pkgDir)@$($meta.version)"
-$target = Join-Path $pkgDir $env:CHANGELOG_OUTPUT
+
+# 输出文件名缺省 changelog.md、旧日志存档缺省不追加；子任务用 env 覆盖
+# （缺省内置在脚本而非任务 env：避免嵌套调用时缺省值反向覆盖子任务的覆写）
+$output = if ($env:CHANGELOG_OUTPUT) { $env:CHANGELOG_OUTPUT } else { 'changelog.md' }
+$legacy = $env:CHANGELOG_LEGACY
+$target = Join-Path $pkgDir $output
 
 # 由 git-cliff 全量重写 changelog，重复运行结果一致，不做手工去重
 git cliff -t $tag -o $target
 if ($LASTEXITCODE -ne 0) { throw 'git cliff 生成 changelog 失败' }
 
 # 追加迁移前的历史记录：cliff 无法再为这些版本生成段落，历史存档单独保存；
-# 包未声明 CHANGELOG_LEGACY（为空）或存档文件不存在时跳过
-if ($env:CHANGELOG_LEGACY) {
-    $legacy = Join-Path $pkgDir $env:CHANGELOG_LEGACY
-    if (Test-Path $legacy) {
-        $legacyText = (Get-Content $legacy -Raw).TrimEnd()
+# 子任务未声明 CHANGELOG_LEGACY 或存档文件不存在时跳过
+if ($legacy) {
+    $legacyPath = Join-Path $pkgDir $legacy
+    if (Test-Path $legacyPath) {
+        $legacyText = (Get-Content $legacyPath -Raw).TrimEnd()
         [System.IO.File]::AppendAllText($target, "`n$legacyText`n", [System.Text.UTF8Encoding]::new($false))
     }
 }
@@ -34,4 +39,4 @@ if ($env:CHANGELOG_LEGACY) {
 # 统一格式并加入暂存区，便于与版本提交一起提交
 prettier -w $target
 git add $target
-Write-Host "已更新 $($env:CHANGELOG_OUTPUT)（$($meta.version)）"
+Write-Host "已更新 $output（$($meta.version)）"

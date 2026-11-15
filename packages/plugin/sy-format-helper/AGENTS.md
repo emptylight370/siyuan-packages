@@ -32,6 +32,7 @@
 | `src/index.ts`                            | `FormatHelper` 主体，菜单注入与批量处理入口                                                                              |
 | `sy-api`（lib）                           | 思源 API 封装（`getDom`、`updateBlockTransactions`、Lute 转换等），共享 lib：`packages/lib/sy-api`，workspace 源码级依赖 |
 | `src/index.scss`                          | 样式源码，经 sass 编译为 `dist/index.css`                                                                                |
+| `changelog.md`                            | **手写**历史 changelog（v0.7.1 及更早的人工整理记录），与 whatschange 体系并行，勿删除或重命名                           |
 | `src/env.d.ts`                            | `*.scss` 模块声明                                                                                                        |
 | `src/i18n/en.json`、`src/i18n/zh-CN.json` | 语言文件，**横线**命名（另两个 vite 包用 `en_US.json` / `zh_CN.json`）                                                   |
 

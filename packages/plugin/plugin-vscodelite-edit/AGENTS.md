@@ -12,7 +12,7 @@
 | `mise run //packages/plugin/plugin-vscodelite-edit:build`      | 上述 build 的 mise 任务形式（别名 `node:plugin-vscodelite-edit#build`；`dev`/`clean`/`lint` 同理）       |
 | 包内 `mise.toml` 的 `[env] _.file = [".env"]`                  | 加载本地 `.env`（未入库）中的 `VITE_SIYUAN_WORKSPACE_PATH` / `VITE_DEV_DIST_DIR`，dev 输出目录即由此决定 |
 | `mise run deploy -- -package plugin-vscodelite-edit`           | 构建并把 `dist/` 镜像同步到 `data/plugins/plugin-vscodelite-edit`                                        |
-| `mise -C packages/plugin/plugin-vscodelite-edit run changelog` | 由 git-cliff 生成 `whatschange.md`                                                                       |
+| `mise -C packages/plugin/plugin-vscodelite-edit run changelog` | 由 git-cliff 生成 `changelog.md`                                                                         |
 
 ## 架构
 
