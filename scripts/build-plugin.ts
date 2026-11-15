@@ -115,6 +115,14 @@ async function readLicense() {
     }
 }
 
+// LICENSE 必须包成 /*! ... */ 块注释（与官方 plugin-sample 产物一致）：裸文本会让产物
+// 成为非法 JS（Node require 直接语法错误），且 CSS 产物也需要同样的声明；
+// 内容中的 */ 转义为 * / 防止注释提前闭合
+function asLegalComment(text: string) {
+    const body = text.trim().replaceAll('*/', '* /').replaceAll('\r\n', '\n');
+    return `/*!\n * ${body.split('\n').join('\n * ')}\n */\n`;
+}
+
 async function copyAssets(meta: PluginMeta) {
     const names = (await fs.readdir(pkgDir)).filter(
         (name) => name === 'icon.png' || name === 'preview.png' || /^README.*\.md$/.test(name),
@@ -202,7 +210,9 @@ async function main() {
         minify: isProd,
         sourcemap: isProd ? false : 'inline',
         legalComments: 'none',
-        banner: isProd ? { js: await readLicense() } : undefined,
+        banner: isProd
+            ? { js: asLegalComment(await readLicense()), css: asLegalComment(await readLicense()) }
+            : undefined,
         plugins: [sassPlugin],
         logLevel: 'info',
     });

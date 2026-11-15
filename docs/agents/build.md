@@ -43,7 +43,7 @@ production 写 `dist/`，development 写**包根**（`index.js`、`index.css`、
 
 `scripts/build-plugin.ts` 是**所有 esbuild 包共用的构建实现**，必须在 `packages/<type>/<pkg>` 目录下运行：它以 `process.cwd()` 定位包目录、以 `bazaar.json` 为标志向上查找仓库根，目录结构不匹配时直接报错退出。
 
-内部用 esbuild JS API，不是 webpack：`bundle: true`、`format: 'cjs'`、`external: ['siyuan', '../plugins/*']`、`target: 'chrome95'`、production 时 `minify` 并把 `LICENSE` 通过 `banner.js` 注入。SCSS 由自定义 plugin 用 `sass.compileAsync` 转成 CSS 后以 `loader: 'css'` 交回 esbuild，自动产出与 `outfile` 同名的 `.css`。静态资源（`icon.png`、`preview.png`、`README*.md`）用 `fs.copyFile`，`src/i18n/` 存在时才复制，`meta.json` 声明的 `publish.resources`（目录条目整树、文件条目单文件；字体包的 `fonts/` 走这条路径）复制进输出目录，dev 模式下源目标相同则跳过，最后由 `jszip` 把 `dist/` 扁平化打成 `package.zip`。
+内部用 esbuild JS API，不是 webpack：`bundle: true`、`format: 'cjs'`、`external: ['siyuan', '../plugins/*']`、`target: 'chrome95'`、production 时 `minify` 并把 `LICENSE` 包成 `/*! ... */` 块注释注入 **JS 与 CSS 两个产物**（与官方 plugin-sample 产物一致；裸文本注入会使产物成为非法 JS，CSS 也会缺许可证声明）。SCSS 由自定义 plugin 用 `sass.compileAsync` 转成 CSS 后以 `loader: 'css'` 交回 esbuild，自动产出与 `outfile` 同名的 `.css`。静态资源（`icon.png`、`preview.png`、`README*.md`）用 `fs.copyFile`，`src/i18n/` 存在时才复制，`meta.json` 声明的 `publish.resources`（目录条目整树、文件条目单文件；字体包的 `fonts/` 走这条路径）复制进输出目录，dev 模式下源目标相同则跳过，最后由 `jszip` 把 `dist/` 扁平化打成 `package.zip`。
 
 构建流程顺序：先以**包目录**为资产基准 `resolvePluginMeta`（取得 `publish.resources` 并校验包内资源存在）→ 复制资源 → 以输出目录 `assertAssets` 复验 → 写 `plugin.json` → esbuild → 打 zip。`external` 里的 `'../plugins/*'` 让 CSS 中引用思源插件挂载路径的 `url()`（如 `loadPetals` 注入样式里 `../plugins/<pkg>/fonts/*.woff` 的字体）保持原样输出、不在构建期解析；**不能用 `'../*'`**——该通配会使 esbuild 0.28 静默丢弃整个 CSS 产物（实测）。
 
