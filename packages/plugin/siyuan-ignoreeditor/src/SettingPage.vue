@@ -21,7 +21,10 @@
                 <a :href="plugin.i18n?.ugIndexignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
               </template>
             </SyAttributeTextarea>
+            <p>{{ plugin.i18n?.indexIgnoreDesc }}</p>
+            <br />
             <SyButton @click="loadIgnoreIndex">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
+            <SySpace />
             <SyButton @click="saveIgnoreIndex">{{ plugin.i18n?.saveIndexignore }}</SyButton>
             <hr />
 
@@ -32,7 +35,10 @@
                 <a :href="plugin.i18n?.ugSearchignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
               </template>
             </SyAttributeTextarea>
+            <p>{{ plugin.i18n?.searchIgnoreDesc }}</p>
+            <br />
             <SyButton @click="loadSearchIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
+            <SySpace />
             <SyButton @click="saveSearchIgnore">{{ plugin.i18n?.saveSearchignore }}</SyButton>
             <hr />
 
@@ -43,7 +49,10 @@
                 <a :href="plugin.i18n?.ugRefignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
               </template>
             </SyAttributeTextarea>
+            <p>{{ plugin.i18n?.refsearchIgnoreDesc }}</p>
+            <br />
             <SyButton @click="loadRefsearchIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
+            <SySpace />
             <SyButton @click="saveRefsearchIgnore">{{ plugin.i18n?.saveRefsearchignore }}</SyButton>
             <hr v-if="syncEnabled" />
 
@@ -54,8 +63,28 @@
                 <a :href="plugin.i18n?.ugSyncignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
               </template>
             </SyAttributeTextarea>
+            <p v-if="syncEnabled">{{ plugin.i18n?.syncIgnoreDesc }}</p>
+            <br v-if="syncEnabled" />
             <SyButton v-if="syncEnabled" @click="loadSyncIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
+            <SySpace />
             <SyButton v-if="syncEnabled" @click="saveSyncIgnore">{{ plugin.i18n?.saveSyncignore }}</SyButton>
+            <hr />
+
+            <!-- 忽略嵌入 -->
+            <SyAttributeTextarea v-model="embeddingignore" :rows="6">
+              <template #label>
+                <span>{{ plugin.i18n?.embeddingignore }}</span>
+                <a :href="plugin.i18n?.ugEmbeddingignoreLink" @click="closeSetting">{{ plugin.i18n?.ugLink }}</a>
+              </template>
+            </SyAttributeTextarea>
+            <p>{{ plugin.i18n?.embeddingIgnoreDesc }}</p>
+            <p v-if="embeddingVersionWarning" class="ignore-version-warning">
+              {{ plugin.i18n?.embeddingIgnoreVersionWarning.replace('{version}', siyuanVersion) }}
+            </p>
+            <br />
+            <SyButton @click="loadEmbeddingIgnore">{{ plugin.i18n?.reloadIgnoreFile }}</SyButton>
+            <SySpace />
+            <SyButton @click="saveEmbeddingIgnore">{{ plugin.i18n?.saveEmbeddingignore }}</SyButton>
           </div>
         </div>
       </div>
@@ -64,8 +93,9 @@
 </template>
 
 <script setup lang="ts">
-import { getRawFile, putRawFile, pushErrMsg } from 'sy-api';
-import { SyAttributeTextarea, SyButton } from 'sy-vite-component';
+import { getRawFile, putRawFile, pushErrMsg, version } from 'sy-api';
+import { SyAttributeTextarea, SyButton, SySpace } from 'sy-vite-component';
+import semver from 'semver';
 import { usePlugin } from '@/main';
 import { onMounted, ref, type Ref } from 'vue';
 
@@ -74,10 +104,24 @@ const ignoreindex = ref('');
 const searchignore = ref('');
 const refsearchignore = ref('');
 const syncignore = ref('');
+const embeddingignore = ref('');
 
 const syncEnabled = ref(false);
 
+// embeddingignore 需要 3.7.0 及以上内核才生效
+const MIN_EMBEDDING_VERSION = '3.7.0';
+const siyuanVersion = ref('');
+const embeddingVersionWarning = ref(false);
+
 onMounted(async () => {
+  try {
+    siyuanVersion.value = await version();
+    const coerced = semver.coerce(siyuanVersion.value);
+    embeddingVersionWarning.value = !!coerced && semver.lt(coerced, MIN_EMBEDDING_VERSION);
+  } catch {
+    // 版本获取失败时不显示警告
+  }
+
   await loadIgnoreIndex();
   await loadSearchIgnore();
   await loadRefsearchIgnore();
@@ -85,6 +129,7 @@ onMounted(async () => {
     await loadSyncIgnore();
     syncEnabled.value = true;
   }
+  await loadEmbeddingIgnore();
 });
 
 // 内核对同步类忽略文件不剥 BOM，带 BOM 时第一条规则会失效，因此读入后统一去掉、保存时不写回
@@ -140,6 +185,14 @@ function saveSyncIgnore() {
   return saveIgnoreFile('/data/.siyuan/syncignore', syncignore);
 }
 
+function loadEmbeddingIgnore() {
+  return loadIgnoreFile('/data/.siyuan/embeddingignore', embeddingignore);
+}
+
+function saveEmbeddingIgnore() {
+  return saveIgnoreFile('/data/.siyuan/embeddingignore', embeddingignore);
+}
+
 const closeSetting = () => {
   const settingEl = document.querySelector('.ignore-setting');
   if (settingEl) {
@@ -148,4 +201,8 @@ const closeSetting = () => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.ignore-version-warning {
+  color: var(--b3-callout-warning);
+}
+</style>

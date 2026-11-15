@@ -10,11 +10,10 @@
 
 ## 支持的忽略文件
 
-| 忽略文件 | 路径                           | 用途                                   | 用户指南                                           |
-| -------- | ------------------------------ | -------------------------------------- | -------------------------------------------------- |
-| 忽略索引 | `data/.siyuan/indexignore`     | 索引时忽略匹配的文档与资源             | [用户指南](siyuan://blocks/20240119205452-o8xp4ve) |
-| 忽略搜索 | `data/.siyuan/searchignore`    | 全局搜索时忽略匹配的 SQL 条件          | [用户指南](siyuan://blocks/20240119205543-hknwwrl) |
-| 忽略引用 | `data/.siyuan/refsearchignore` | 查询引用/反向引用时忽略匹配的 SQL 条件 | [用户指南](siyuan://blocks/20240119205543-hknwwrl) |
-| 忽略同步 | `data/.siyuan/syncignore`      | 云端同步时忽略匹配的文档与资源         | [用户指南](siyuan://blocks/20210928094544-vg2c2ts) |
-
-用户指南链接为 `siyuan://` 协议，在思源笔记中打开（GitHub 页面上不可点击）。
+| 忽略文件 | 路径                           | 用途                                                         | 用户指南                                           |
+| -------- | ------------------------------ | ------------------------------------------------------------ | -------------------------------------------------- |
+| 忽略索引 | `data/.siyuan/indexignore`     | 索引时忽略匹配的文档与资源（gitignore 通配符语法）           | [用户指南](siyuan://blocks/20240119205452-o8xp4ve) |
+| 忽略搜索 | `data/.siyuan/searchignore`    | 全局搜索时忽略匹配的 SQL 条件                                | [用户指南](siyuan://blocks/20240119205543-hknwwrl) |
+| 忽略引用 | `data/.siyuan/refsearchignore` | 查询引用/反向引用时忽略匹配的 SQL 条件                       | [用户指南](siyuan://blocks/20240119205543-hknwwrl) |
+| 忽略同步 | `data/.siyuan/syncignore`      | 云端同步时忽略匹配的文档与资源（gitignore 通配符语法）       | [用户指南](siyuan://blocks/20210928094544-vg2c2ts) |
+| 忽略嵌入 | `data/.siyuan/embeddingignore` | 嵌入块模型处理时忽略匹配的文档与资源（gitignore 通配符语法） | [用户指南](siyuan://blocks/20260804171001-semnt01) |

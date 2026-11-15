@@ -10,11 +10,10 @@ SiYuan Note has some built-in ignore files for different scenarios. It's too tro
 
 ## Supported ignore files
 
-| Ignore file      | Path                           | Purpose                                              | User guide                                           |
-| ---------------- | ------------------------------ | ---------------------------------------------------- | ---------------------------------------------------- |
-| Index ignore     | `data/.siyuan/indexignore`     | Exclude matched docs/assets from indexing            | [User guide](siyuan://blocks/20240119211017-1vbbt95) |
-| Search ignore    | `data/.siyuan/searchignore`    | Exclude matched SQL conditions from global search    | [User guide](siyuan://blocks/20240119212048-0huuevw) |
-| Reference ignore | `data/.siyuan/refsearchignore` | Exclude matched SQL conditions from reference search | [User guide](siyuan://blocks/20240119212048-0huuevw) |
-| Sync ignore      | `data/.siyuan/syncignore`      | Exclude matched docs/assets from cloud syncing       | [User guide](siyuan://blocks/20210928101257-l27t5uo) |
-
-User guide links use the `siyuan://` protocol and open in SiYuan Note (not clickable on GitHub).
+| Ignore file      | Path                           | Purpose                                                                       | User guide                                           |
+| ---------------- | ------------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Index ignore     | `data/.siyuan/indexignore`     | Exclude matched docs/assets from indexing (gitignore wildcards)               | [User guide](siyuan://blocks/20240119211017-1vbbt95) |
+| Search ignore    | `data/.siyuan/searchignore`    | Exclude matched SQL conditions from global search                             | [User guide](siyuan://blocks/20240119212048-0huuevw) |
+| Reference ignore | `data/.siyuan/refsearchignore` | Exclude matched SQL conditions from reference search                          | [User guide](siyuan://blocks/20240119212048-0huuevw) |
+| Sync ignore      | `data/.siyuan/syncignore`      | Exclude matched docs/assets from cloud syncing (gitignore wildcards)          | [User guide](siyuan://blocks/20210928101257-l27t5uo) |
+| Embed ignore     | `data/.siyuan/embeddingignore` | Exclude matched docs/assets from embed model processing (gitignore wildcards) | [User guide](siyuan://blocks/20260804171005-semnt03) |

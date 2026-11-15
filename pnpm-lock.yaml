@@ -112,7 +112,14 @@ importers:
         version: 3.5.45(typescript@7.0.2)
 
   packages/plugin/siyuan-ignoreeditor:
+    dependencies:
+      semver:
+        specifier: ^7.8.6
+        version: 7.8.6
     devDependencies:
+      '@types/semver':
+        specifier: ^7.8.0
+        version: 7.8.0
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
         version: 6.0.11(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.108.2)(yaml@2.9.1))(vue@3.5.45(typescript@7.0.2))
@@ -712,6 +719,9 @@ packages:
   '@types/node@26.6.6':
     resolution: {integrity: sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==}
 
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
+
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
     engines: {node: '>=16.20.0'}
@@ -1194,6 +1204,11 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
+  semver@7.8.6:
+    resolution: {integrity: sha512-9lpSSU4Mly3mrtruwLs1eLK6+gzbzqeBFwRNjIjE+9LuDpWdYctrQlQ3ej1Ilgi7gknpsTRnPoLP8DpCHqHIJw==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   setimmediate@1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
 
@@ -1630,6 +1645,8 @@ snapshots:
   '@types/node@26.6.6':
     dependencies:
       undici-types: 8.9.0
+
+  '@types/semver@7.8.0': {}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
@@ -2093,6 +2110,8 @@ snapshots:
       source-map-js: 1.2.2
     optionalDependencies:
       '@parcel/watcher': 2.6.0
+
+  semver@7.8.6: {}
 
   setimmediate@1.0.5: {}
 
