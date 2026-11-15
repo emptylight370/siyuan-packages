@@ -1,4 +1,4 @@
-## [0.1.0](https://github.com/emptylight370/siyuan-packages/compare/siyuan-ignoreeditor@0.1.0...siyuan-ignoreeditor@0.1.0) (2026-11-15)
+## [0.2.0](https://github.com/emptylight370/siyuan-packages/compare/siyuan-ignoreeditor@0.1.0...siyuan-ignoreeditor@0.2.0) (2026-11-15)
 
 ### ✨ Features | 功能
 
@@ -8,6 +8,8 @@
 
 - 统一提取通用依赖项 ([5082e02](https://github.com/emptylight370/siyuan-packages/commit/5082e02b1cf158fded8e8d8b908c64340a260df8))
 - js脚本迁移ts ([d6abd27](https://github.com/emptylight370/siyuan-packages/commit/d6abd272849478e6dda73d37dc736c3baec74aec))
+- 使icon和preview可选 ([438d05e](https://github.com/emptylight370/siyuan-packages/commit/438d05e9555ffabf5de86fed9db5702236371a73))
+- 更新图标 ([b08304f](https://github.com/emptylight370/siyuan-packages/commit/b08304fa2f8c3cdb87479f7ce64575938baccbf5))
 
 ## [0.1.0](https://github.com/emptylight370/siyuan-packages/compare/8cf5ea5e981a491fa45c4c4e001a17d66bab2d68...siyuan-ignoreeditor@0.1.0) (2026-11-15)
 
