@@ -16,3 +16,6 @@ prettier = "latest"
 description = "Install lefthook hooks"
 run = "lefthook install"
 sources = ["lefthook.yml"]
+
+[settings]
+task.auto_infer = ["node"]

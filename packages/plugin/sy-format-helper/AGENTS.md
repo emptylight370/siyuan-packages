@@ -4,13 +4,14 @@
 
 ## 常用命令
 
-| 命令                                                     | 说明                                                        |
-| -------------------------------------------------------- | ----------------------------------------------------------- |
-| `pnpm install`（仓库根）                                 | 安装全部 workspace 依赖                                     |
-| `pnpm --filter sy-format-helper build`                   | 生产构建，产出 `dist/` 与 `package.zip`                     |
-| `pnpm --filter sy-format-helper dev`                     | esbuild watch，产物写到包根，便于软链到思源插件目录调试     |
-| `mise run deploy -- -package sy-format-helper`           | 构建并把 `dist/` 镜像同步到 `data/plugins/sy-format-helper` |
-| `mise -C packages/plugin/sy-format-helper run changelog` | 由 git-cliff 生成 `whatschange.md`                          |
+| 命令                                                     | 说明                                                                                         |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm install`（仓库根）                                 | 安装全部 workspace 依赖                                                                      |
+| `pnpm --filter sy-format-helper build`                   | 生产构建，产出 `dist/` 与 `package.zip`                                                      |
+| `pnpm --filter sy-format-helper dev`                     | esbuild watch，产物写到包根，便于软链到思源插件目录调试                                      |
+| `mise run //packages/plugin/sy-format-helper:build`      | 上述 build 的 mise 任务形式（别名 `node:sy-format-helper#build`；`dev`/`clean`/`lint` 同理） |
+| `mise run deploy -- -package sy-format-helper`           | 构建并把 `dist/` 镜像同步到 `data/plugins/sy-format-helper`                                  |
+| `mise -C packages/plugin/sy-format-helper run changelog` | 由 git-cliff 生成 `whatschange.md`                                                           |
 
 ## 架构
 

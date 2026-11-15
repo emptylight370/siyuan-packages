@@ -4,13 +4,14 @@
 
 ## 常用命令
 
-| 命令                                                           | 说明                                                              |
-| -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `pnpm install`（仓库根）                                       | 安装全部 workspace 依赖                                           |
-| `pnpm --filter plugin-vscodelite-edit build`                   | 生产构建，产出 `dist/` 与 `package.zip`                           |
-| `pnpm --filter plugin-vscodelite-edit dev`                     | vite watch，输出到 `VITE_SIYUAN_WORKSPACE_PATH` 指向的插件目录    |
-| `mise run deploy -- -package plugin-vscodelite-edit`           | 构建并把 `dist/` 镜像同步到 `data/plugins/plugin-vscodelite-edit` |
-| `mise -C packages/plugin/plugin-vscodelite-edit run changelog` | 由 git-cliff 生成 `whatschange.md`                                |
+| 命令                                                           | 说明                                                                                               |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `pnpm install`（仓库根）                                       | 安装全部 workspace 依赖                                                                            |
+| `pnpm --filter plugin-vscodelite-edit build`                   | 生产构建，产出 `dist/` 与 `package.zip`                                                            |
+| `pnpm --filter plugin-vscodelite-edit dev`                     | vite watch，输出到 `VITE_SIYUAN_WORKSPACE_PATH` 指向的插件目录                                     |
+| `mise run //packages/plugin/plugin-vscodelite-edit:build`      | 上述 build 的 mise 任务形式（别名 `node:plugin-vscodelite-edit#build`；`dev`/`clean`/`lint` 同理） |
+| `mise run deploy -- -package plugin-vscodelite-edit`           | 构建并把 `dist/` 镜像同步到 `data/plugins/plugin-vscodelite-edit`                                  |
+| `mise -C packages/plugin/plugin-vscodelite-edit run changelog` | 由 git-cliff 生成 `whatschange.md`                                                                 |
 
 ## 架构
 
@@ -49,7 +50,7 @@
 - `viteStaticCopy` 复制 `README*.md`、`icon.png`、`preview.png`、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
 - 生产构建由 `vite-plugin-zip-pack` 打包 `dist/` 为 `package.zip`
 - 产物含 `dist/index.css`（与 `siyuan-ignoreeditor` 不同，后者样式内联）
-- `siyuan` 依赖固定在 `1.2.6`，低于其他两个包，升级前先确认 API 差异
+- `siyuan` 依赖为 `^1.3.0`（与另两个包一致）
 
 ### 关键约定
 

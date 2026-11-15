@@ -16,9 +16,13 @@ pnpm lint                         # oxlint packages/plugin
 pnpm lint:fix                     # 同上并自动修复
 pnpm format                       # prettier -w .（读根 .prettierrc 与 .prettierignore）
 pnpm -r clean                     # 删除各包 dist 与 package.zip
+mise run //:build                 # 根脚本也导入为 mise 任务（workspace graph），等价 pnpm -r build
+mise run //packages/plugin/sy-format-helper:build   # 单包构建（= pnpm --filter sy-format-helper build）
 mise run tag                      # 为各包创建本地发布 tag（已存在或版本未变则跳过）
 mise run deploy -- -package <pkg> # 构建单包并把 dist 部署到思源工作空间
 ```
+
+monorepo 模式 + workspace graph 把根与各包的 `package.json` scripts、子包 `.mise/tasks/` 全部导入为 mise 任务：根与包脚本名为 `node:<pkg>#<script>`（根项目 `node:siyuan-packages#build`），同时有路径式别名 `//packages/plugin/<pkg>:<script>`；两者都从仓库根直接可调用，`mise tasks`（包内）/ `mise tasks --all`（根）查看。
 
 没有测试框架，也没有测试脚本；质量门禁是 `pnpm lint`、`prettier -c .` 与 `pnpm -r build` 三者。
 
@@ -98,7 +102,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 ### 工具链分层
 
-- **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*"]`）。
+- **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*"]`），各包的 pnpm scripts 与 `.mise/tasks/` 因此都出现在根目录的 `mise tasks --all` 里；node 脚本导入由根 `mise.toml` 的 `[settings] task.auto_infer = ["node"]` 启用。该特性在 mise 文档中标注为 experimental，但实测（当前版本）`experimental = false` 时导入照常工作、不报错，CI 的 mise-action 默认值下无需额外开关。
 - **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）与类型包（@types/*），脚本是 workspace 级聚合。
 - **包内 `package.json`** 只放构建链（esbuild、sass、jszip、rimraf）与 `siyuan` 类型；`prettier` 不装（mise 提供，避免双版本漂移）。
 - 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`.oxlintrc.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
@@ -116,7 +120,7 @@ lint 已从 ESLint 迁到 **oxlint**，配置在根 `.oxlintrc.json`：
 
 **TS 版本约束解除**：移除 `@typescript-eslint` 后，`typescript` 不再被 `>=4.8.4 <6.1.0` 的 peer 锁定（曾实测 TS 7.0 会让 ESLint 崩溃），可升级至 TS 7；类型检查用的 `tsc` 换成 tsgo 后，`tsconfig.node.json` 的 `composite` + `--noEmit` 组合需重新实测。
 
-- 包内 `.mise/tasks/` 会被 mise 识别为任务（无需包内 `mise.toml`），但必须用 `mise -C <pkgDir> run <task>` 调用，根目录下看不到子包任务。当前有 `changelog` 与 `release` 两个任务。
+- 包内 `.mise/tasks/` 会被 mise 识别为任务（无需包内 `mise.toml`）；monorepo 模式下根目录也能看到子包任务，用 `mise run //packages/plugin/<pkg>:<task>` 调用（包目录内裸名 `mise run <task>` 与 `mise -C <pkgDir> run <task>` 均等价）。当前有 `changelog` 与 `release` 两个任务。
 
 ### TypeScript 配置
 
@@ -145,7 +149,7 @@ esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chr
 
 ### 本地发布任务
 
-包内 `.mise/tasks/` 提供两个 PowerShell 任务，都必须在包目录下运行（`mise -C packages/plugin/<pkg> run <task>`），因为脚本用 `Get-Location` 定位包目录：
+包内 `.mise/tasks/` 提供两个 PowerShell 任务。脚本用 `Get-Location` 定位包目录，monorepo 模式下 mise 把任务执行目录设为所属包目录，因此从根目录 `mise run //packages/plugin/<pkg>:<task>` 也能正确运行；包目录内裸名 `mise run <task>` 与 `mise -C` 形式同样可用：
 
 | 任务        | 作用                                                                                                                                                                                                          |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -244,7 +248,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见「changelog 配置」）
 5. `.mise/tasks/changelog.ps1`（复制现有包；不需生成的包也要**空任务占位**，否则 pre-commit 会失败）
 6. 补包内 `AGENTS.md`：构建栈、模块职责、i18n 命名、隐性约定
-7. 验证：根 `pnpm install` → `pnpm -r build` → `pnpm lint` → `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json` → `mise -C packages/plugin/<pkg> run changelog`；确认 `dist/plugin.json` 的 `name` / `url` / `version` 为派生值
+7. 验证：根 `pnpm install` → `pnpm -r build` → `pnpm lint` → `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json` → `mise run //packages/plugin/<pkg>:changelog`（包目录内亦可 `mise run changelog`）；确认 `dist/plugin.json` 的 `name` / `url` / `version` 为派生值。新包落在 `config_roots` glob 内，其 scripts 与任务会自动出现在根目录 `mise tasks --all`
 8. 发布：初始化目标仓库 stub（README 重定向 + `.github/ISSUE_TEMPLATE/config.yml`）并提供 `main` 分支，`mise run tag` 后推送 tag
 
 ### 迁移来源的差异步骤
