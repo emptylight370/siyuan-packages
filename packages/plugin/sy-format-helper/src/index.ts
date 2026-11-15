@@ -1,7 +1,7 @@
 import { Plugin, showMessage, Menu } from 'siyuan';
 import './index.scss';
 import { IProtyle } from 'siyuan/types';
-import * as api from './api';
+import * as api from 'sy-api';
 
 export default class FormatHelper extends Plugin {
     private appId = this.app.appId;
@@ -134,7 +134,7 @@ export default class FormatHelper extends Plugin {
     // NOTE - 处理单个文本块，返回是否发生修改并提交
     private async handleTextBlock(blockId: string, protyle: IProtyle, type: string): Promise<boolean> {
         // 获取块（接口异常时 request 返回 null，必须先判空再取属性）
-        const dom: { dom: string; id: string } | null = await api.getDom(blockId);
+        const dom: IResGetBlockDOM | null = await api.getDom(blockId);
         if (!dom || !dom.dom) {
             throw new Error(`getBlockDOM failed: ${blockId}`);
         }
@@ -304,7 +304,7 @@ export default class FormatHelper extends Plugin {
     // NOTE - 处理代码块菜单点击事件
     private async handleCodeBlock(blockId: string, type: string) {
         // 获取块
-        const dom: { dom: string; id: string } = await api.getDom(blockId);
+        const dom: IResGetBlockDOM = await api.getDom(blockId);
         const id = dom.id;
         // console.log(dom);
         // 如果未获取到块

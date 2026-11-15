@@ -27,13 +27,13 @@
 
 ### 模块结构
 
-| 路径                                      | 职责                                                                   |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| `src/index.ts`                            | `FormatHelper` 主体，菜单注入与批量处理入口                            |
-| `src/api.ts`                              | 思源 API 封装，用到 `getDom`、`updateBlockTransactions` 等             |
-| `src/index.scss`                          | 样式源码，经 sass 编译为 `dist/index.css`                              |
-| `src/env.d.ts`                            | `*.scss` 模块声明                                                      |
-| `src/i18n/en.json`、`src/i18n/zh-CN.json` | 语言文件，**横线**命名（另两个 vite 包用 `en_US.json` / `zh_CN.json`） |
+| 路径                                      | 职责                                                                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `src/index.ts`                            | `FormatHelper` 主体，菜单注入与批量处理入口                                                                              |
+| `sy-api`（lib）                           | 思源 API 封装（`getDom`、`updateBlockTransactions`、Lute 转换等），共享 lib：`packages/lib/sy-api`，workspace 源码级依赖 |
+| `src/index.scss`                          | 样式源码，经 sass 编译为 `dist/index.css`                                                                                |
+| `src/env.d.ts`                            | `*.scss` 模块声明                                                                                                        |
+| `src/i18n/en.json`、`src/i18n/zh-CN.json` | 语言文件，**横线**命名（另两个 vite 包用 `en_US.json` / `zh_CN.json`）                                                   |
 
 `src/index.ts` 内部结构：
 

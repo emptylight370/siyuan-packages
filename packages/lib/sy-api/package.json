@@ -1,9 +1,9 @@
 {
-  "name": "sy-vite-api",
+  "name": "sy-api",
   "version": "0.0.1",
   "type": "module",
   "private": true,
-  "description": "源自 vite-vue 插件模板的思源 API 封装（monorepo 内部 lib，源码级打进插件产物，不发布集市）",
+  "description": "思源 API 封装（monorepo 内部 lib，源码级打进插件产物，不发布集市）",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

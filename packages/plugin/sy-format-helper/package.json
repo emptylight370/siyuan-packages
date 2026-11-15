@@ -12,6 +12,7 @@
     "esbuild": "^0.28.2",
     "jszip": "^3.10.1",
     "sass": "^1.107.1",
-    "siyuan": "^1.3.0"
+    "siyuan": "^1.3.0",
+    "sy-api": "workspace:*"
   }
 }

@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2023 frostime. All rights reserved.
- * https://github.com/frostime/sy-plugin-template-vite
- *
- * 【vite-vue 模板 API】本文件是 vite-vue 模板自带的思源 API 封装，monorepo 内由
- * sy-ignoreeditor 与 plugin-vscodelite-edit 同源复制而来（曾逐字节一致），现抽到本 lib 共享。
- * 注意：sy-format-helper 的 src/api.ts 是另一套独立演化的业务 API（transaction、格式转换链），
- * 两者同源于早期模板但内容不同，不要互相合并。
- *
- * See API Document in [API.md](https://github.com/siyuan-note/siyuan/blob/master/API.md)
- * API 文档见 [API_zh_CN.md](https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md)
+ * See API Document in [API.md](https://github.com/siyuan-note/siyuan/blob/master/docs/API.md)
+ * API 文档见 [API.zh-CN.md](https://github.com/siyuan-note/siyuan/blob/master/docs/API.zh-CN.md)
+ * （本仓库 docs/ 目录有快照：../docs/API.md 与 ../docs/API.zh-CN.md）
  */
 
-import { fetchSyncPost, IWebSocketData } from 'siyuan';
+import { fetchSyncPost, IWebSocketData, Lute } from 'siyuan';
 
-async function request(url: string, data: any) {
+async function request(url: string, data?: any) {
     const response: IWebSocketData = await fetchSyncPost(url, data);
     const res = response.code === 0 ? response.data : null;
     return res;
@@ -74,7 +67,8 @@ export async function createDocWithMd(notebook: NotebookId, path: string, markdo
     return request(url, data);
 }
 
-export async function renameDoc(notebook: NotebookId, path: string, title: string): Promise<DocumentId> {
+// 文档明确 data: null，仅表示操作结果，不返回新文档信息
+export async function renameDoc(notebook: NotebookId, path: string, title: string) {
     const data = {
         doc: notebook,
         path: path,
@@ -247,6 +241,43 @@ export async function transferBlockRef(fromID: BlockId, toID: BlockId, refIDs: B
     return request(url, data);
 }
 
+// 获取块 DOM
+// ⚠ 未列入官方公开 API（文档仅承诺文档内专门章节的接口），属内核路由，无兼容性保证
+export async function getDom(id: string): Promise<IResGetBlockDOM> {
+    const data = { id: id };
+    return request('/api/block/getBlockDOM', data);
+}
+
+// 通过事务更新块，可撤回（仅支持 DOM）
+// ⚠ 官方文档明确声明 /api/transactions 为内部实现，不提供兼容性或行为稳定性保证
+export async function updateBlockTransactions(nodeId: string, appId: string, original: string, updated: string) {
+    const nowTime = await currentTime();
+    const data = [
+        {
+            doOperations: [
+                {
+                    action: 'update',
+                    id: nodeId,
+                    data: updated,
+                },
+            ],
+            undoOperations: [
+                {
+                    action: 'update',
+                    id: nodeId,
+                    data: original,
+                },
+            ],
+        },
+    ];
+    return request('/api/transactions', {
+        session: appId,
+        app: appId,
+        reqId: nowTime,
+        transactions: data,
+    });
+}
+
 // **************************************** Attributes ****************************************
 export async function setBlockAttrs(id: BlockId, attrs: { [key: string]: string }) {
     const data = {
@@ -279,6 +310,11 @@ export async function getBlockByID(blockId: string): Promise<Block> {
     const sqlScript = `select * from blocks where id ='${blockId}'`;
     const data = await sql(sqlScript);
     return data[0];
+}
+
+// 刷新数据库，提交未落库的事务
+export async function refreshSQL() {
+    return request('/api/sqlite/flushTransaction');
 }
 
 // **************************************** Template ****************************************
@@ -332,7 +368,8 @@ export async function removeFile(path: string) {
     return request(url, data);
 }
 
-export async function readDir(path: string): Promise<IResReadDir> {
+// 文档 data 为目录条目数组
+export async function readDir(path: string): Promise<IResReadDir[]> {
     const data = {
         path: path,
     };
@@ -428,4 +465,39 @@ export async function version(): Promise<string> {
 
 export async function currentTime(): Promise<number> {
     return request('/api/system/currentTime', {});
+}
+
+// **************************************** Lute ****************************************
+
+// 思源全局注入的 Lute 编辑器实例，用于 markdown / DOM / HTML 互转（同步调用，非网络请求）
+const NewLute: () => Lute = (globalThis as any).Lute.New;
+
+// 从 DOM 转 MD
+export function DOM2MD(dom: string): string {
+    return NewLute().BlockDOM2Md(dom);
+}
+
+// 从 DOM 转 HTML
+export function DOM2HTML(dom: string): string {
+    return NewLute().BlockDOM2HTML(dom);
+}
+
+// 从 HTML 转 MD
+export function HTML2MD(html: string): string {
+    return NewLute().HTML2Md(html);
+}
+
+// 从 HTML 转 DOM
+export function HTML2DOM(html: string): string {
+    return NewLute().HTML2BlockDOM(html);
+}
+
+// 从 MD 转 DOM
+export function MD2DOM(markdown: string): string {
+    return NewLute().Md2BlockDOM(markdown);
+}
+
+// 从 MD 转 HTML
+export function MD2HTML(markdown: string): string {
+    return NewLute().BlockDOM2HTML(NewLute().Md2BlockDOM(markdown));
 }
