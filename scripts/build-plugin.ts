@@ -2,43 +2,67 @@
 import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { resolvePluginMeta } from './plugin-meta.mjs';
+import { resolvePluginMeta } from './plugin-meta.ts';
 
 const pkgDir = process.cwd();
 
 // 构建依赖装在各自包内（pnpm 严格模式），因此从包目录解析而不是从脚本所在位置
 const requireFromPackage = createRequire(path.join(pkgDir, 'package.json'));
 
-let esbuildModule;
-let jszipModule;
-let sassModule;
+// scripts/ 解析不到包内 devDependencies 的类型声明，这里只声明用到的最小形状
+interface EsbuildContext {
+    rebuild(): Promise<unknown>;
+    watch(): Promise<unknown>;
+    dispose(): Promise<unknown>;
+}
 
-function requireFromPackageOrThrow(name) {
+interface EsbuildModule {
+    context(options: Record<string, unknown>): Promise<EsbuildContext>;
+}
+
+interface SassModule {
+    compileAsync(path: string, options: { style: string }): Promise<{ css: string }>;
+}
+
+interface JSZipInstance {
+    file(name: string, data: Buffer): void;
+    generateAsync(options: {
+        type: 'nodebuffer';
+        compression: 'DEFLATE';
+        compressionOptions: { level: number };
+    }): Promise<Buffer>;
+}
+
+let esbuildModule: EsbuildModule | undefined;
+let jszipModule: (new () => JSZipInstance) | undefined;
+let sassModule: SassModule | undefined;
+
+function requireFromPackageOrThrow<T>(name: string): T {
     try {
-        return requireFromPackage(name);
+        return requireFromPackage(name) as T;
     } catch (error) {
         throw new Error(`当前包没有安装 ${name}，请先执行 pnpm install`, { cause: error });
     }
 }
 
-function getEsbuild() {
+function getEsbuild(): EsbuildModule {
     if (!esbuildModule) {
-        esbuildModule = requireFromPackageOrThrow('esbuild');
+        esbuildModule = requireFromPackageOrThrow<EsbuildModule>('esbuild');
     }
     return esbuildModule;
 }
 
-function getJSZip() {
+function getJSZip(): new () => JSZipInstance {
     if (!jszipModule) {
-        jszipModule = requireFromPackageOrThrow('jszip');
+        jszipModule = requireFromPackageOrThrow<new () => JSZipInstance>('jszip');
     }
     return jszipModule;
 }
 
 // sass 仅在有 .scss 引入时才需要，避免纯静态包被迫安装
-function getSass() {
+function getSass(): SassModule {
     if (!sassModule) {
-        sassModule = requireFromPackageOrThrow('sass');
+        sassModule = requireFromPackageOrThrow<SassModule>('sass');
     }
     return sassModule;
 }
@@ -51,8 +75,18 @@ const distDir = path.join(pkgDir, 'dist');
 const outDir = isProd ? distDir : pkgDir;
 const zipPath = path.join(pkgDir, 'package.zip');
 
+interface EsbuildSassPlugin {
+    name: string;
+    setup(build: {
+        onLoad(
+            options: { filter: RegExp },
+            callback: (args: { path: string }) => Promise<{ contents: string; loader: string }>,
+        ): void;
+    }): void;
+}
+
 // 把 sass 编译结果交给 esbuild 处理，使其能像 css 一样被 import 并输出独立文件
-const sassPlugin = {
+const sassPlugin: EsbuildSassPlugin = {
     name: 'sass',
     setup(build) {
         build.onLoad({ filter: /\.scss$/ }, async (args) => {
@@ -64,7 +98,7 @@ const sassPlugin = {
     },
 };
 
-async function exists(target) {
+async function exists(target: string) {
     try {
         await fs.access(target);
         return true;
@@ -95,7 +129,7 @@ async function copyAssets() {
 
 async function createPackageZip() {
     const zip = new (getJSZip())();
-    const addDir = async (dir) => {
+    const addDir = async (dir: string) => {
         const entries = await fs.readdir(dir, { withFileTypes: true });
         for (const entry of entries) {
             const full = path.join(dir, entry.name);
@@ -166,6 +200,6 @@ async function main() {
 try {
     await main();
 } catch (error) {
-    console.error(`::error::${error.message}`);
+    console.error(`::error::${(error as Error).message}`);
     process.exit(1);
 }

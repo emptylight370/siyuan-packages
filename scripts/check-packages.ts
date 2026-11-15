@@ -1,24 +1,24 @@
 // 仓库结构校验：不构建、不产生物，只检查各发布包的静态契约。
 // 供 `pnpm check` 与 lefthook pre-commit 调用；与构建期校验的分工：
 // - 这里管「包的形状」：清单字段、资源文件、命名约定（所有发布包全量查）；
-// - build-plugin.mjs 管「本次构建」：TAG_VERSION 一致性、输出目录资源。
-// 检测项刻意精简：复用 resolvePluginMeta 覆盖清单与资源，额外只补四项纯静态规则。
+// - build-plugin.ts 管「本次构建」：TAG_VERSION 一致性、输出目录资源。
+// 检测项刻意精简：复用 resolvePluginMeta 覆盖清单与资源，额外只补纯静态规则。
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { resolvePluginMeta } from './plugin-meta.mjs';
+import { resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
 
 const rootDir = path.resolve(import.meta.dirname, '..');
 const packagesDir = path.join(rootDir, 'packages');
 
-async function readJson(file) {
+async function readJson(file: string): Promise<Record<string, unknown> | null> {
     try {
-        return JSON.parse(await fs.readFile(file, 'utf8'));
+        return JSON.parse(await fs.readFile(file, 'utf8')) as Record<string, unknown>;
     } catch {
         return null;
     }
 }
 
-async function fileExists(target) {
+async function fileExists(target: string) {
     try {
         await fs.access(target);
         return true;
@@ -28,8 +28,8 @@ async function fileExists(target) {
 }
 
 // 集市规范：version 单调递增且不带 v 前缀
-function checkVersionFormat(version) {
-    if (typeof version !== 'string' || /^v/.test(version)) {
+function checkVersionFormat(version: string): string | null {
+    if (/^v/.test(version)) {
         return 'version 不应带 v 前缀';
     }
     if (!/^\d+\.\d+\.\d+(-[\w.-]+)?$/.test(version)) {
@@ -39,17 +39,17 @@ function checkVersionFormat(version) {
 }
 
 // 集市描述字段约定：displayName / description 至少提供 default 文案
-function checkLocalizedField(meta, field) {
+function checkLocalizedField(meta: PluginMeta, field: string): string | null {
     const value = meta[field];
-    if (typeof value === 'string' || (value && typeof value.default === 'string')) {
+    if (typeof value === 'string' || (value && typeof (value as Record<string, unknown>).default === 'string')) {
         return null;
     }
     return `缺少 ${field}.default 文案`;
 }
 
 // bazaar 默认值 + 包级覆盖合并后的平台范围不能为空数组
-function checkPlatformRange(meta, field) {
-    if (Array.isArray(meta[field]) && meta[field].length > 0) {
+function checkPlatformRange(meta: PluginMeta, field: string): string | null {
+    if (Array.isArray(meta[field]) && (meta[field] as unknown[]).length > 0) {
         return null;
     }
     return `${field} 不能为空数组`;
@@ -62,8 +62,8 @@ function checkPlatformRange(meta, field) {
 const DIRECTORY_RESOURCES_MIN_APP_VERSION = '3.8.6';
 const SETTINGS_WINDOW_MIN_APP_VERSION = '3.8.7';
 
-function compareVersions(a, b) {
-    const parse = (version) => version.split('-')[0].split('.').map(Number);
+function compareVersions(a: string, b: string) {
+    const parse = (version: string) => version.split('-')[0].split('.').map(Number);
     const [aMajor, aMinor, aPatch] = parse(a);
     const [bMajor, bMinor, bPatch] = parse(b);
     for (let i = 0; i < 3; i += 1) {
@@ -77,7 +77,7 @@ function compareVersions(a, b) {
 }
 
 // 特性用到宿主新版本能力时的通用检查：minAppVersion 必须声明且达到门槛
-function requireMinAppVersion(feature, minVersion, meta) {
+function requireMinAppVersion(feature: string, minVersion: string, meta: PluginMeta): string | null {
     if (!meta.minAppVersion) {
         return `${feature} 要求思源 ${minVersion}+，但未填写 minAppVersion`;
     }
@@ -87,7 +87,7 @@ function requireMinAppVersion(feature, minVersion, meta) {
     return null;
 }
 
-function checkPublishResources(meta) {
+function checkPublishResources(meta: PluginMeta): string | null {
     const resources = meta.publish?.resources ?? [];
     if (!resources.some((resource) => typeof resource === 'string' && resource.endsWith('/'))) {
         return null;
@@ -95,25 +95,25 @@ function checkPublishResources(meta) {
     return requireMinAppVersion('publish.resources 目录形式', DIRECTORY_RESOURCES_MIN_APP_VERSION, meta);
 }
 
-function checkSettingsWindow(meta) {
+function checkSettingsWindow(meta: PluginMeta): string | null {
     if (meta.settingsWindow !== true) {
         return null;
     }
     return requireMinAppVersion('settingsWindow', SETTINGS_WINDOW_MIN_APP_VERSION, meta);
 }
 
-async function checkPackage(pkgDir) {
+async function checkPackage(pkgDir: string): Promise<[string, string[], string[]]> {
     const pkgName = path.basename(pkgDir);
-    const errors = [];
-    const warnings = [];
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     // 覆盖：目录层级、bazaar owner/types、meta.json 禁止 name/url、
     // version 存在、合并后必填字段、readme/icon/preview/publish.resources 存在
-    let meta;
+    let meta: PluginMeta;
     try {
         ({ meta } = await resolvePluginMeta({ pkgDir }));
     } catch (error) {
-        return [pkgName, [error.message], []];
+        return [pkgName, [(error as Error).message], []];
     }
 
     // minAppVersion 集市非必填（缺省视为全版本适用），仅推荐填写
@@ -145,7 +145,7 @@ async function checkPackage(pkgDir) {
 }
 
 async function main() {
-    const pkgDirs = [];
+    const pkgDirs: string[] = [];
     const types = await fs.readdir(packagesDir, { withFileTypes: true });
     for (const type of types.filter((entry) => entry.isDirectory())) {
         const pkgs = await fs.readdir(path.join(packagesDir, type.name), { withFileTypes: true });

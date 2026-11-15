@@ -1,15 +1,17 @@
 {
   "name": "siyuan-packages",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "description": "SiYuan plugin monorepo",
   "scripts": {
     "build": "pnpm -r build",
-    "check": "node scripts/check-packages.mjs",
+    "check": "node scripts/check-packages.ts",
     "clean": "pnpm -r clean",
     "lint": "oxlint packages",
     "lint:fix": "oxlint packages --fix",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "typecheck": "tsc -p scripts"
   },
   "devEngines": {
     "runtime": {

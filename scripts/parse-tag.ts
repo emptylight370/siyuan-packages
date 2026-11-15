@@ -5,7 +5,16 @@ const rootDir = path.resolve(import.meta.dirname, '..');
 const TAG_PATTERN = /^([^@\s]+)@([^@\s]+)$/;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/;
 
-async function isDirectory(target) {
+interface BazaarFile {
+    owner?: string;
+    types?: Record<string, unknown>;
+}
+
+interface PackageMeta {
+    version?: string;
+}
+
+async function isDirectory(target: string) {
     try {
         return (await fs.stat(target)).isDirectory();
     } catch {
@@ -15,24 +24,29 @@ async function isDirectory(target) {
 }
 
 // 文件不存在时返回 null（用于识别迁移前的提交），JSON 解析失败仍然中断
-async function readJson(file) {
+async function readJson<T>(file: string): Promise<T | null> {
     try {
-        return JSON.parse(await fs.readFile(file, 'utf8'));
+        return JSON.parse(await fs.readFile(file, 'utf8')) as T;
     } catch (error) {
-        if (error.code === 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
             return null;
         }
-        throw new Error(`读取 ${path.relative(rootDir, file)} 失败: ${error.message}`, { cause: error });
+        throw new Error(`读取 ${path.relative(rootDir, file)} 失败: ${(error as Error).message}`, { cause: error });
     }
 }
 
-async function findPackage(name) {
+interface PackageCandidate {
+    type: string;
+    dir: string;
+}
+
+async function findPackage(name: string): Promise<PackageCandidate[] | null> {
     const packagesDir = path.join(rootDir, 'packages');
     if (!(await isDirectory(packagesDir))) {
         return null;
     }
     const entries = await fs.readdir(packagesDir, { withFileTypes: true });
-    const candidates = [];
+    const candidates: PackageCandidate[] = [];
     for (const entry of entries.filter((item) => item.isDirectory())) {
         if (await isDirectory(path.join(packagesDir, entry.name, name))) {
             candidates.push({ type: entry.name, dir: `packages/${entry.name}/${name}` });
@@ -41,7 +55,7 @@ async function findPackage(name) {
     return candidates;
 }
 
-async function writeOutput(output) {
+async function writeOutput(output: Record<string, string | boolean>) {
     const lines = Object.entries(output)
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
@@ -54,7 +68,7 @@ async function writeOutput(output) {
 async function main() {
     const tag = process.argv[2];
     if (!tag) {
-        throw new Error('用法: node scripts/parse-tag.mjs <package>@<version>');
+        throw new Error('用法: node scripts/parse-tag.ts <package>@<version>');
     }
 
     const parsed = TAG_PATTERN.exec(tag);
@@ -79,7 +93,7 @@ async function main() {
 
     const [{ type, dir }] = candidates;
 
-    const bazaar = await readJson(path.join(rootDir, 'bazaar.json'));
+    const bazaar = await readJson<BazaarFile>(path.join(rootDir, 'bazaar.json'));
     if (!bazaar) {
         throw new Error('bazaar.json 不存在');
     }
@@ -90,7 +104,7 @@ async function main() {
         throw new Error(`bazaar.json 缺少 types.${type}`);
     }
 
-    const meta = await readJson(path.join(rootDir, dir, 'meta.json'));
+    const meta = await readJson<PackageMeta>(path.join(rootDir, dir, 'meta.json'));
     if (!meta) {
         console.warn(`::warning::${dir} 缺少 meta.json，可能是旧版本 tag，将跳过发布`);
         await writeOutput({
@@ -113,7 +127,7 @@ async function main() {
     await writeOutput({
         name,
         version,
-        meta_version: meta.version,
+        meta_version: meta.version ?? '',
         matched: versionMatched,
         reason: versionMatched ? '' : `meta.json 版本 (${meta.version}) 与 tag (${version}) 不一致`,
         type,
@@ -125,6 +139,6 @@ async function main() {
 try {
     await main();
 } catch (error) {
-    console.error(`::error::${error.message}`);
+    console.error(`::error::${(error as Error).message}`);
     process.exit(1);
 }

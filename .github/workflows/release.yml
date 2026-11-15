@@ -30,10 +30,13 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      # mise 提供 node（类型剥离需 23.6+，须在运行 .ts 脚本前就绪）
+      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+
       # 处理 tag，提取包名和版本
       - name: Parse tag
         id: meta
-        run: node scripts/parse-tag.mjs "${{ inputs.tag || github.ref_name }}"
+        run: node scripts/parse-tag.ts "${{ inputs.tag || github.ref_name }}"
 
       # 统一判定是否继续：meta.json 版本与 tag 不一致、或已存在同名 release 时跳过后续全部步骤
       - name: Check whether to release
@@ -55,9 +58,6 @@ jobs:
             echo "::error::检查 $repo 的 release 失败: $output"
             exit 1
           fi
-
-      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
-        if: steps.state.outputs.skip != 'true'
 
       - name: Install dependencies
         if: steps.state.outputs.skip != 'true'

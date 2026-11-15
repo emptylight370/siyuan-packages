@@ -9,7 +9,7 @@
 ```bash
 mise install                      # 安装 node / pnpm / prettier / git-cliff / lefthook
 pnpm install                      # 安装根与所有 workspace 包的依赖
-pnpm -r build                     # 构建全部包（各包调用根 scripts/build-plugin.mjs）
+pnpm -r build                     # 构建全部包（各包调用根 scripts/build-plugin.ts）
 pnpm --filter sy-format-helper build   # 单包 production 构建，产出 <pkg>/dist 与 <pkg>/package.zip
 pnpm --filter sy-format-helper dev     # esbuild watch，产物写到包根，便于软链到思源插件目录调试
 pnpm lint                         # oxlint packages/plugin
@@ -36,13 +36,13 @@ pnpm --filter ./packages/plugin/sy-format-helper build    # 根目录，按目�
 cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 ```
 
-产物位置按模式区分。构建实现分两类：esbuild 包走 `scripts/build-plugin.mjs`（包内脚本只做转发），vite 包的 `vite.config.ts` 转发到 `scripts/vite-plugin-config.mjs` 的 `createPluginViteConfig()`（公共编排，包内只传 `import.meta.dirname` 与 `deps`——scripts/ 解析不到包内 devDependencies，vite 辅助与插件实例必须由包内传入）；两类构建的元数据合成统一由 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件：
+产物位置按模式区分。构建实现分两类：esbuild 包走 `scripts/build-plugin.ts`（包内脚本只做转发），vite 包的 `vite.config.ts` 转发到 `scripts/vite-plugin-config.ts` 的 `createPluginViteConfig()`（公共编排，包内只传 `import.meta.dirname` 与 `deps`——scripts/ 解析不到包内 devDependencies，vite 辅助与插件实例必须由包内传入）；两类构建的元数据合成统一由 `scripts/plugin-meta.ts` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件：
 
-| 模式              | 命令                                                                | 产物                                                 |
-| ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
-| production        | `build`（即 `node ../../../scripts/build-plugin.mjs --production`） | `<pkg>/dist/` 与 `<pkg>/package.zip`                 |
-| development 单次  | `pnpm --filter <pkg> exec node ../../../scripts/build-plugin.mjs`   | 包根 `index.js`、`index.css`、`i18n/`、`plugin.json` |
-| development watch | `dev`（即 `node ../../../scripts/build-plugin.mjs --watch`）        | 同上，持续重建并阻塞终端                             |
+| 模式              | 命令                                                               | 产物                                                 |
+| ----------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
+| production        | `build`（即 `node ../../../scripts/build-plugin.ts --production`） | `<pkg>/dist/` 与 `<pkg>/package.zip`                 |
+| development 单次  | `pnpm --filter <pkg> exec node ../../../scripts/build-plugin.ts`   | 包根 `index.js`、`index.css`、`i18n/`、`plugin.json` |
+| development watch | `dev`（即 `node ../../../scripts/build-plugin.ts --watch`）        | 同上，持续重建并阻塞终端                             |
 
 - production 先清空 `dist/` 与旧 `package.zip`，再合并元数据、校验必填字段与资源引用、最后打 zip，任一步失败即中断
 - development 输出到包根，是为了能直接把 `packages/<type>/<pkg>` 软链或复制到思源的 `data/plugins` 调试；这些产物全部被 `.gitignore` 忽略
@@ -88,11 +88,11 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 | 差异 | `packages/<type>/<pkg>/meta.json`          | 仅包独有字段，`version` 是唯一版本来源                                                        |
 | 产物 | `<outDir>/<type>.json`（即 `plugin.json`） | 合并结果，进 `package.zip`                                                                    |
 
-`scripts/build-plugin.mjs` 的 `composeMeta()` 负责：`bazaar.types[type]` 与 `meta.json` 深合并（对象递归、数组整体替换）→ `${owner}/${name}/${version}` 占位符替换 → 派生 `name`（目录名）、`url`（`https://github.com/<owner>/<name>`）、`version` → 校验。
+`scripts/build-plugin.ts` 的 `composeMeta()` 负责：`bazaar.types[type]` 与 `meta.json` 深合并（对象递归、数组整体替换）→ `${owner}/${name}/${version}` 占位符替换 → 派生 `name`（目录名）、`url`（`https://github.com/<owner>/<name>`）、`version` → 校验。
 
 规则：`meta.json` **禁止**出现 `name` / `url`（构建期派生，出现即报错）；11 个必填字段缺失即失败（`minAppVersion` 非必填——集市缺省视为全版本适用，仅推荐填写，`pnpm check` 会对缺失给警告）；`readme` / `icon` / `preview` / `publish.resources` 必须在产物目录存在；环境变量 `TAG_VERSION` 存在时必须等于 `meta.version`。
 
-另有独立的 `pnpm check`（`scripts/check-packages.mjs`，pre-commit 由 lefthook 触发）：不构建、全量校验各发布包静态契约，检测项在构建校验之外补充 `version` 格式（semver、无 `v` 前缀）、`displayName`/`description` 有 `default` 文案、`backends`/`frontends` 非空、`package.json` `name` 与目录名一致；警告不拦截、错误 exit 1。
+另有独立的 `pnpm check`（`scripts/check-packages.ts`，pre-commit 由 lefthook 触发）：不构建、全量校验各发布包静态契约，检测项在构建校验之外补充 `version` 格式（semver、无 `v` 前缀）、`displayName`/`description` 有 `default` 文案、`backends`/`frontends` 非空、`package.json` `name` 与目录名一致；警告不拦截、错误 exit 1。
 
 ### 特性版本门槛记录
 
@@ -111,7 +111,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 ### 构建实现
 
-`scripts/build-plugin.mjs` 是**所有包共用的唯一构建实现**，必须在 `packages/<type>/<pkg>` 目录下运行：它以 `process.cwd()` 定位包目录、以 `bazaar.json` 为标志向上查找仓库根，目录结构不匹配时直接报错退出。
+`scripts/build-plugin.ts` 是**所有包共用的唯一构建实现**，必须在 `packages/<type>/<pkg>` 目录下运行：它以 `process.cwd()` 定位包目录、以 `bazaar.json` 为标志向上查找仓库根，目录结构不匹配时直接报错退出。
 
 内部用 esbuild JS API，不是 webpack：`bundle: true`、`format: 'cjs'`、`external: ['siyuan']`、`target: 'es6'`、production 时 `minify` 并把 `LICENSE` 通过 `banner.js` 注入。SCSS 由自定义 plugin 用 `sass.compileAsync` 转成 CSS 后以 `loader: 'css'` 交回 esbuild，自动产出与 `outfile` 同名的 `.css`。静态资源（`icon.png`、`preview.png`、`README*.md`）用 `fs.copyFile`，`src/i18n/` 存在时才复制，最后由 `jszip` 把 `dist/` 扁平化打成 `package.zip`。
 
@@ -120,7 +120,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 ### 工具链分层
 
 - **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*", "packages/lib/*"]`），各包的 pnpm scripts 与 `.mise/tasks/` 因此都出现在根目录的 `mise tasks --all` 里；node 脚本导入由根 `mise.toml` 的 `[settings] task.auto_infer = ["node"]` 启用。该特性在 mise 文档中标注为 experimental，但实测（当前版本）`experimental = false` 时导入照常工作、不报错，CI 的 mise-action 默认值下无需额外开关。
-- **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）与类型包（@types/*），脚本是 workspace 级聚合。
+- **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）与类型包（@types/\*），脚本是 workspace 级聚合。
 - **包内 `package.json`** 只放构建链（esbuild、sass、jszip、rimraf）与 `siyuan` 类型；`prettier` 不装（mise 提供，避免双版本漂移）。
 - 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`.oxlintrc.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
 
@@ -154,7 +154,7 @@ lint 已从 ESLint 迁到 **oxlint**，配置在根 `.oxlintrc.json`：
 
 不进 base 的项：`paths`（各包别名不同）、`types`（vite 包需要 `vite/client`）、`jsx` / `allowJs` / `checkJs`（Vue 工程特有）、`noEmit`（`tsconfig.node.json` 的 `composite` 需要 emit）、`noUnusedLocals` / `noUnusedParameters`（严格度选项）。
 
-esbuild 的产物语法目标在 `scripts/build-plugin.mjs` 里单独设为 `chrome95`，与 tsconfig 的 `target` 相互独立。
+esbuild 的产物语法目标在 `scripts/build-plugin.ts` 里单独设为 `chrome95`，与 tsconfig 的 `target` 相互独立。
 
 类型检查**不在**质量门禁内（`pnpm lint` 只跑 oxlint，不读 tsconfig），需要时手动执行 `pnpm exec tsc --noEmit -p packages/plugin/<pkg>/tsconfig.json`；含 `.vue` 的包需要 `vue-tsc` 才能覆盖 SFC 内部（当前靠 `*.vue` 声明文件绕过了那部分）。
 
@@ -192,7 +192,7 @@ pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格�
 
 `.github/workflows/release.yml` 由 tag push（`*@*`）触发，也可 `workflow_dispatch` 手动补发：
 
-1. `scripts/parse-tag.mjs` 解析 `<pkg>@<version>`，扫描 `packages/*/<pkg>` 要求**恰好命中 1 个**目录，输出 `name/version/meta_version/matched/reason/type/dir/owner`。`packages` 目录或 `meta.json` 缺失（迁移前提交、旧版本 tag）、`meta.json.version` 与 tag 不一致时输出 `matched=false`；tag 格式错误、包目录匹配数不为 1、`bazaar.json` 结构缺失仍然中断。
+1. `scripts/parse-tag.ts` 解析 `<pkg>@<version>`，扫描 `packages/*/<pkg>` 要求**恰好命中 1 个**目录，输出 `name/version/meta_version/matched/reason/type/dir/owner`。`packages` 目录或 `meta.json` 缺失（迁移前提交、旧版本 tag）、`meta.json.version` 与 tag 不一致时输出 `matched=false`；tag 格式错误、包目录匹配数不为 1、`bazaar.json` 结构缺失仍然中断。
 2. `Check whether to release` 汇总跳过条件（`matched=false`，或 `gh release view` 显示目标仓库已有该版本），输出 `skip`。其中 `release not found|HTTP 404` 视为未发布，其他错误（如 `RELEASE_TOKEN` 无效）直接失败。后续所有步骤条件统一为 `if: steps.state.outputs.skip != 'true'`。
 3. `pnpm --filter <pkg> build`，`TAG_VERSION` 传入以在构建期再校验一次版本。
 4. `git cliff --config <pkg>/cliff.toml --latest -o release.md` 生成 release notes。
@@ -202,11 +202,11 @@ pre-commit 还有两个 job：`prettier`（`stage_fixed: true` 自动回写格�
 
 子仓库的 tag 是**裸版本号**（`0.7.1`），不给 `v` 前缀也不带包名；monorepo 的 tag 才是 `<pkg>@<version>`。跨仓发布必须用 PAT 或 GitHub App token（`GITHUB_TOKEN` 只能作用于本仓库），且目标仓库必须已有 `main` 分支（stub 初始化）。
 
-**单次运行只处理 1 个包**：`parse-tag.mjs` 一次只解析一个 tag，且要求 `packages/*/<pkg>` 恰好命中 1 个目录；工作流是单 job、没有 `strategy.matrix`，`workflow_dispatch` 的 `inputs.tag` 也只有一个字符串。多包发布需推多个 tag，由 GitHub 为每个 tag 各自创建一次运行并行执行（`concurrency.group = release-<tag>` 按 tag 隔离：同 tag 排队不并行，不同 tag 完全并行）。因此每次运行都会重复 `checkout --fetch-depth 0` 与 `pnpm install --frozen-lockfile`，发 N 个包就有 N 次重复开销，只有 `pnpm --filter <pkg> build` 是单包范围。若要一次运行处理多包，需改成 matrix（拆分 `inputs.tags` 为列表）或加 pnpm store 缓存压低重复成本。
+**单次运行只处理 1 个包**：`parse-tag.ts` 一次只解析一个 tag，且要求 `packages/*/<pkg>` 恰好命中 1 个目录；工作流是单 job、没有 `strategy.matrix`，`workflow_dispatch` 的 `inputs.tag` 也只有一个字符串。多包发布需推多个 tag，由 GitHub 为每个 tag 各自创建一次运行并行执行（`concurrency.group = release-<tag>` 按 tag 隔离：同 tag 排队不并行，不同 tag 完全并行）。因此每次运行都会重复 `checkout --fetch-depth 0` 与 `pnpm install --frozen-lockfile`，发 N 个包就有 N 次重复开销，只有 `pnpm --filter <pkg> build` 是单包范围。若要一次运行处理多包，需改成 matrix（拆分 `inputs.tags` 为列表）或加 pnpm store 缓存压低重复成本。
 
 ### 元数据字段校验
 
-`node scripts/validate-meta.mjs`（仓库根运行）校验各包 `dist/<type>.json` 是否符合集市要求，任一失败即退出码 1。规则来源是 `siyuan-note/plugin-sample` 的 README 与 `plugin.json`（0.5.2）以及集市规则（`siyuan-note/bazaar` 的 `rules/`）：
+规则来源是 `siyuan-note/plugin-sample` 的 README 与 `plugin.json`（0.5.2）以及集市规则（`siyuan-note/bazaar` 的 `rules/`）：
 
 | 校验项       | 规则                                                                                                                               |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -259,7 +259,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 
 1. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`），不要提交 `plugin.json`（构建产物）；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 2. 构建接入：
-   - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.mjs`
+   - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.ts`
    - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, loadEnv, vue, fg, minimist, livereload, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见「changelog 配置」）
@@ -294,7 +294,7 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 接入前需要先扩展基础设施（当前全部面向插件）：
 
 1. `bazaar.json` 增加 `types.theme` 模板：`author`、`icon`、`preview`、`readme`、`funding`；`modes` 是包特有字段，写进包内 `meta.json`
-2. `scripts/plugin-meta.mjs` 的 `REQUIRED_FIELDS` 需按 `pkgType` 区分：主题不含 `backends`（也不含 `frontends`，主题清单无此字段）；`metaFile = \`${pkgType}.json\``会自动输出`theme.json`，现有代码无需改动
+2. `scripts/plugin-meta.ts` 的 `REQUIRED_FIELDS` 需按 `pkgType` 区分：主题不含 `backends`（也不含 `frontends`，主题清单无此字段）；`metaFile = \`${pkgType}.json\``会自动输出`theme.json`，现有代码无需改动
 3. `deploy.ps1` 的映射已有 `theme = 'themes'`，但脚本会先执行 `pnpm --filter <pkg> build`——主题无构建脚本，需改为跳过构建、把包根（`theme.json`、`theme.css`、图标）直接镜像到 `data/themes/<pkg>`
 4. `release.yml` 的 `pnpm --filter <pkg> build` 对无 build script 的包会报错，`package.zip` 也需另行生成（PowerShell `Compress-Archive` 或独立 zip 步骤）——接入第一个主题包时一并处理
 5. `tsconfig.base.json` 对主题无意义（没有 TS 源码），`tsconfig.json` 可省略
@@ -305,10 +305,10 @@ prettier 的 ignore 文件只在**当前工作目录**查找、不向上搜索�
 
 迁移路线按需选择：
 
-| 路线         | 做法                                                                                                                                       | 适用                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| 迁 vite      | 与现有 vite 包同构；kernel 产物用 `build.rollupOptions.input` 第二入口或 `--config` 第二个配置文件输出到不同目录                           | kernel 产物只是静态资源      |
-| 迁 esbuild   | 删掉 webpack 全家（webpack、webpack-cli、copy/zip/mini-css 插件、sass-loader、npm-run-all 共 10+ 依赖）；`build-plugin.mjs` 需扩展为多入口 | 想统一到根构建脚本           |
-| 保留 webpack | 包内自洽（webpack、esbuild-loader、zip-webpack-plugin 留在包内），根只管聚合；`tsconfig` 仍继承 base                                       | 内核构建逻辑复杂、不值得重写 |
+| 路线         | 做法                                                                                                                                      | 适用                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| 迁 vite      | 与现有 vite 包同构；kernel 产物用 `build.rollupOptions.input` 第二入口或 `--config` 第二个配置文件输出到不同目录                          | kernel 产物只是静态资源      |
+| 迁 esbuild   | 删掉 webpack 全家（webpack、webpack-cli、copy/zip/mini-css 插件、sass-loader、npm-run-all 共 10+ 依赖）；`build-plugin.ts` 需扩展为多入口 | 想统一到根构建脚本           |
+| 保留 webpack | 包内自洽（webpack、esbuild-loader、zip-webpack-plugin 留在包内），根只管聚合；`tsconfig` 仍继承 base                                      | 内核构建逻辑复杂、不值得重写 |
 
 无论哪条路线：`dprint` 换成 prettier（根已配置），`patches/` 的依赖补丁逐个确认是否仍必要；双入口的 `build` 编排（`run-p` / `run-s`）可用 `npm-run-all` 保留或改用 pnpm 的并行 script（`pnpm run --filter` / `&`）
