@@ -44,12 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import SyButton from '@/components/SiyuanTheme/SyButton.vue';
-import SyCheckbox from '@/components/SiyuanTheme/SyCheckbox.vue';
-import SyIcon from '@/components/SiyuanTheme/SyIcon.vue';
-import SyInput from '@/components/SiyuanTheme/SyInput.vue';
-import SySelect from '@/components/SiyuanTheme/SySelect.vue';
-import SyTextarea from '@/components/SiyuanTheme/SyTextarea.vue';
+import { SyButton, SyCheckbox, SyIcon, SyInput, SySelect, SyTextarea } from 'sy-vite-component';
 import { usePlugin } from '@/main';
 import { onMounted, ref, watchEffect } from 'vue';
 

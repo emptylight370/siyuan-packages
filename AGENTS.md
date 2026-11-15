@@ -76,7 +76,7 @@ git push origin "sy-format-helper@0.7.2"   # 推送 tag 触发 CI 发布
 
 `packages/<type>/<pkg>/`，目前只有 `type = plugin`。**包目录名同时是插件名、构建产物元数据的 `name`、目标发布仓库名**，改名会同时影响集市、发布仓库与构建派生字段。
 
-另有 `packages/lib/<pkg>/` 存放**内部共享 lib**（当前 `sy-vite-api`——源自 vite-vue 模板的思源 API 封装；`sy-format-helper` 的 `src/api.ts` 是另一套业务实现，勿混淆）：不发布集市，无 `meta.json` / `cliff.toml`，以 `workspace:*` 声明并**源码级打进插件产物**（无需 build/clean 脚本，`pnpm -r` 自动跳过）；changelog 任务只需空占位。lib 的 `IRes*` 返回类型是 ambient 全局声明，引用的 `NotebookId`/`Notebook`/`Block` 等基础类型仍由插件包 `src/types/index.d.ts` 提供，因此 lib 不做独立 tsc 检查，由消费方工程覆盖（基础类型后续抽取进 lib 后可独立化）。
+另有 `packages/lib/<pkg>/` 存放**内部共享 lib**：`sy-vite-api`（源自 vite-vue 模板的思源 API 封装；`sy-format-helper` 的 `src/api.ts` 是另一套业务实现，勿混淆）与 `sy-vite-component`（思源风格基础控件，控件 `.vue` 平铺在 `src/`）。lib 不发布集市，无 `meta.json` / `cliff.toml`，以 `workspace:*` 声明并**源码级打进插件产物**（无需 build/clean 脚本，`pnpm -r` 自动跳过）；changelog 任务只需空占位。lib 的 ambient 类型声明经 `import type {}` 进入消费方编译程序；`IRes*` 等引用的基础类型仍由插件包 `src/types/index.d.ts` 提供，lib 不做独立 tsc 检查，由消费方工程覆盖。新增控件：`src/` 下新建 `SyXxx.vue`（思源 `b3-*` 样式类、`<script setup>` 编译宏、v-model 用 `modelValue`/`update:modelValue` 惯例）→ `index.ts` 追加导出 → 消费方 `import { SyXxx } from 'sy-vite-component'`；新依赖才改 package.json。
 
 ### 元数据三层模型（最需要注意的部分）
 

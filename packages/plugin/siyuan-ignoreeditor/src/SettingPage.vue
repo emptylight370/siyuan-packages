@@ -55,8 +55,7 @@
 
 <script setup lang="ts">
 import { getFile, putFile } from 'sy-vite-api';
-import SyButton from '@/components/SiyuanTheme/SyButton.vue';
-import SyTextarea from '@/components/SiyuanTheme/SyTextarea.vue';
+import { SyButton, SyTextarea } from 'sy-vite-component';
 import { usePlugin } from '@/main';
 import { onMounted, ref } from 'vue';
 

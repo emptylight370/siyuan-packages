@@ -30,6 +30,12 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
 
+  packages/lib/sy-vite-component:
+    devDependencies:
+      vue:
+        specifier: ^3.5.45
+        version: 3.5.45(typescript@7.0.2)
+
   packages/plugin/plugin-vscodelite-edit:
     devDependencies:
       '@vitejs/plugin-vue':
@@ -50,6 +56,9 @@ importers:
       siyuan:
         specifier: ^1.3.0
         version: 1.3.0
+      sy-vite-component:
+        specifier: workspace:*
+        version: link:../../lib/sy-vite-component
       vite:
         specifier: ^8.3.6
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.108.2)(yaml@2.9.1)
@@ -86,6 +95,9 @@ importers:
       sy-vite-api:
         specifier: workspace:*
         version: link:../../lib/sy-vite-api
+      sy-vite-component:
+        specifier: workspace:*
+        version: link:../../lib/sy-vite-component
       vite:
         specifier: ^8.3.6
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.108.2)(yaml@2.9.1)
