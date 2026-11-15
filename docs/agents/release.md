@@ -63,7 +63,7 @@ include_paths = ["packages/<type>/<pkg>/**"]         # 键名是复数，值为 
 
 `tag_pattern` 只做筛选、**不会**从 tag 名提取版本号，所以标题用 `version | split(pat="@") | last` 渲染成 `0.7.1`；而 `compare` 链接必须使用**完整 tag 名**（`previous.version` / `version`），因为 monorepo 的 tag 带包名前缀，用裸版本号会 404。`include_paths` 的值必须能匹配到文件层级（`/**` 或带尾斜杠的目录形式），写纯目录会导致所有提交被过滤、cliff 认不出 tag 并退化为 `## [unreleased]`。
 
-`postprocessors` 的 `<REPO>` 指向**当前 monorepo**（`https://github.com/<owner>/siyuan-packages`）：commit 只存在于 monorepo，子仓库不再推送代码。`output` 指向包内 `whatschange.md`，CI 用 `-o release.md` 覆盖输出，不会污染包内文件。
+`postprocessors` 的 `<REPO>` 指向**当前 monorepo**（`https://github.com/<owner>/siyuan-packages`）：commit 只存在于 monorepo，子仓库不再推送代码。`output` 指向包内 changelog 文件——文件名由包内 `mise.toml` 的 env `CHANGELOG_OUTPUT` 声明，缺省 `changelog.md`；既有插件包声明为 `whatschange.md`，两个 `siyuan-ttf-*` 字体包沿用缺省 `changelog.md`（迁移时保留上游命名），CI 用 `-o release.md` 覆盖输出，不会污染包内文件。
 
 历史版本无法由 cliff 重新生成：`git subtree add` 保留的是原仓库提交对象，它们的 diff 路径是原仓库根（`src/`、`package.json`、`plugin.json`），不匹配 `packages/<type>/<pkg>/**`（实测命中 0），因此历史 tag 全部失效、cliff 只能输出当前版本段落。历史记录保存在 `whatschange.old.md`，由 `changelog` 任务在生成后追加；也正因为如此，**不要在已发布版本上运行 `changelog`**，否则会产生重复段落。
 

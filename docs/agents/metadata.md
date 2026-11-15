@@ -42,6 +42,6 @@
 | 版本联动                      | `settingsWindow: true` 需 `minAppVersion >= 3.8.7`；`publish.resources` 含目录声明需 `>= 3.8.6`（见上表）                                                                   | `plugin-sample` README        |
 | 主题 `modes`                  | 仅允许 `light` / `dark`（当前无 theme 包，保留规则备用）                                                                                                                    | `plugin-sample` README        |
 
-可选字段 `kernels`（仅含 `kernel.js` 时需要）、`publish`、`bootAppearances`、`settingsWindow` 当前均未声明，属按需状态。
+可选字段 `kernels`（仅含 `kernel.js` 时需要）、`bootAppearances` 当前未声明，属按需状态；`publish`（`publish.resources` 目录形式）与 `settingsWindow` 已有实际使用者——两个 `siyuan-ttf-*` 字体包（`publish.resources: ["fonts/"]`、`settingsWindow: true`，`minAppVersion` 3.8.7 同时满足两条门槛）。
 
 **警告不拦截、错误 exit 1**。产物级集市限制（`icon` ≤ 64 KiB、`preview` ≤ 512 KiB、不支持 SVG，建议 160×160 / 1024×768）当前**没有自动检查**，来源是 `plugin-sample` README，产物异常时对照官方文档人工核。

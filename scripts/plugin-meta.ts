@@ -139,7 +139,7 @@ export async function findRootDir(start: string): Promise<string> {
     throw new Error(`无法从 ${start} 定位仓库根目录（未找到 bazaar.json）`);
 }
 
-async function assertAssets(meta: PluginMeta, assetDir: string) {
+export async function assertAssets(meta: PluginMeta, assetDir: string) {
     const readme = typeof meta.readme === 'string' ? { default: meta.readme } : (meta.readme ?? {});
     const resources = [...Object.values(readme), meta.icon, meta.preview, ...(meta.publish?.resources ?? [])];
     for (const resource of resources.filter(Boolean)) {

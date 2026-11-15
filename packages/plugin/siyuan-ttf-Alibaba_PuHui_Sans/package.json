@@ -1,0 +1,18 @@
+{
+  "name": "siyuan-ttf-Alibaba_PuHui_Sans",
+  "version": "0.10.3",
+  "scripts": {
+    "lint": "oxlint . --fix",
+    "dev": "node ../../../scripts/build-plugin.ts --watch",
+    "build": "node ../../../scripts/build-plugin.ts --production",
+    "clean": "rimraf dist package.zip"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "jszip": "^3.10.1",
+    "rimraf": "catalog:",
+    "sass": "catalog:",
+    "siyuan": "catalog:"
+  }
+}

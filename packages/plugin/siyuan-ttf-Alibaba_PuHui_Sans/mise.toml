@@ -1,10 +1,5 @@
-[tools]
-git-cliff = "latest"
-lefthook = "latest"
-node = "26"
-"prettier" = "latest"
-
-[deps.lefthook]
-description = "Install lefthook hooks"
-run = "lefthook install"
-sources = ["lefthook.yml", ".lefthook", ".lefthook-local"]
+# changelog 逻辑唯一实现在根文件任务 //:changelog（.mise/tasks/changelog.ps1，dir={{cwd}}）；
+# 本包沿用 changelog.md 并追加历史存档
+[tasks.changelog]
+run = "mise run //:changelog"
+env = { CHANGELOG_LEGACY = "changelog.old.md" }

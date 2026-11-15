@@ -1,11 +1,5 @@
 {
-  "name": "siyuan-ttf-Alibaba_PuHui_Sans",
-  "author": "Emptylight",
-  "url": "https://github.com/emptylight370/siyuan-ttf-Alibaba_PuHui_Sans",
   "version": "0.10.3",
-  "backends": ["all"],
-  "frontends": ["all"],
-  "disabledInPublish": false,
   "minAppVersion": "3.8.7",
   "settingsWindow": true,
   "displayName": {
@@ -16,18 +10,8 @@
     "default": "Use Alibaba PuHui Sans as layout font",
     "zh-CN": "使用阿里巴巴普惠体作为界面字体"
   },
-  "readme": {
-    "default": "README.md",
-    "zh-CN": "README.zh-CN.md"
-  },
   "icon": "icon.png",
   "preview": "preview.png",
-  "funding": {
-    "openCollective": "",
-    "patreon": "",
-    "github": "",
-    "custom": ["https://blog.emptylight.cn/sponsor"]
-  },
   "keywords": ["中文字体", "English Font", "Japanese Font"],
   "publish": {
     "resources": ["fonts/"]

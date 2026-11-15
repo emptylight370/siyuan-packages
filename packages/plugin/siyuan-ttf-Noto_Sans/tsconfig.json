@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "siyuan/types": ["./node_modules/siyuan/types"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

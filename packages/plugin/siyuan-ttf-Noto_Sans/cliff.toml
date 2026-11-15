@@ -6,10 +6,11 @@
 # See https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
+    {% set bare_version = version | split(pat="@") | last %}\
     {% if previous.version %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        ## [{{ bare_version }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% else %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+        ## [{{ bare_version }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
     {% endif %}\
 {% else %}\
     ## [unreleased]
@@ -37,12 +38,16 @@ render_always = true
 # An array of regex based postprocessors to modify the changelog.
 postprocessors = [
   # Replace the placeholder <REPO> with a URL.
-  { pattern = "<REPO>", replace = "https://github.com/emptylight370/siyuan-ttf-Noto_Sans" },
+  { pattern = "<REPO>", replace = "https://github.com/emptylight370/siyuan-packages" },
 ]
 # output file path
 output = "changelog.md"
 
 [git]
+# 只用本包 tag 作为版本锚点（monorepo 各包共用一份提交历史）
+tag_pattern = "^siyuan-ttf-Noto_Sans@"
+# 键名是复数，值为 glob 数组；必须能匹配到文件层级，写纯目录会导致所有提交被过滤
+include_paths = ["packages/plugin/siyuan-ttf-Noto_Sans/**"]
 # Parse commits according to the conventional commits specification.
 # See https://www.conventionalcommits.org
 conventional_commits = true

@@ -2,7 +2,7 @@
 import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { resolvePluginMeta } from './plugin-meta.ts';
+import { assertAssets, resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
 
 const pkgDir = process.cwd();
 
@@ -115,7 +115,7 @@ async function readLicense() {
     }
 }
 
-async function copyAssets() {
+async function copyAssets(meta: PluginMeta) {
     const names = (await fs.readdir(pkgDir)).filter(
         (name) => name === 'icon.png' || name === 'preview.png' || /^README.*\.md$/.test(name),
     );
@@ -124,6 +124,23 @@ async function copyAssets() {
     const i18nDir = path.join(pkgDir, 'src', 'i18n');
     if (await exists(i18nDir)) {
         await fs.cp(i18nDir, path.join(outDir, 'i18n'), { recursive: true });
+    }
+
+    // publish.resources：集市可发布的额外资源（meta.json 声明、resolvePluginMeta 已校验存在于包目录）。
+    // 目录条目（以 / 结尾）整树复制，文件条目单文件复制，均保持声明路径的相对结构；
+    // dev 模式 outDir 即包根，源目标相同则跳过
+    for (const resource of meta.publish?.resources ?? []) {
+        const source = path.join(pkgDir, resource);
+        const target = path.join(outDir, resource);
+        if (path.resolve(source) === path.resolve(target)) {
+            continue;
+        }
+        if (resource.endsWith('/')) {
+            await fs.cp(source, target, { recursive: true });
+        } else {
+            await fs.mkdir(path.dirname(target), { recursive: true });
+            await fs.copyFile(source, target);
+        }
     }
 }
 
@@ -158,10 +175,14 @@ async function main() {
         await fs.mkdir(distDir, { recursive: true });
     }
 
-    await copyAssets();
+    // 先以包目录为资产基准解析元数据，取得 publish.resources 供资源复制
+    const { meta, metaFile } = await resolvePluginMeta({ pkgDir });
 
-    // 元数据在资源复制之后合成，因此资源校验以输出目录为准
-    const { meta, metaFile } = await resolvePluginMeta({ pkgDir, assetDir: outDir });
+    await copyAssets(meta);
+
+    // 资源复制完成后以输出目录复验（readme/icon/preview/publish.resources 必须都能在 dist 中找到）
+    await assertAssets(meta, outDir);
+
     await fs.writeFile(path.join(outDir, metaFile), `${JSON.stringify(meta, null, 2)}\n`);
     console.log(`${metaFile} ${meta.name}@${meta.version}`);
 
@@ -174,7 +195,10 @@ async function main() {
         // 思源桌面端用 latest-2 的 Electron，移动端 webview 最低 Chrome 95，产物语法按此目标保留
         target: 'chrome95',
         platform: 'browser',
-        external: ['siyuan'],
+        // siyuan 为运行时依赖；'../plugins/*' 让 CSS 里引用思源插件挂载路径（如 loadPetals 注入样式
+        // 中 ../plugins/<pkg>/fonts/ 的字体）的 url() 保持原样输出，不在构建期解析或打包。
+        // 注意不能用 '../*'：该通配会使 esbuild 0.28 静默丢弃整个 CSS 产物（实测）
+        external: ['siyuan', '../plugins/*'],
         minify: isProd,
         sourcemap: isProd ? false : 'inline',
         legalComments: 'none',
