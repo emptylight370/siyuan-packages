@@ -20,7 +20,7 @@
 | 任务                                                   | 读                                                       |
 | ------------------------------------------------------ | -------------------------------------------------------- |
 | 写代码、过质量门禁                                     | [docs/agents/quality.md](docs/agents/quality.md)         |
-| 构建、调试、dev 软链                                   | [docs/agents/build.md](docs/agents/build.md)             |
+| 构建、调试、部署                                       | [docs/agents/build.md](docs/agents/build.md)             |
 | 改 `meta.json` / `bazaar.json`、集市规则、特性版本门槛 | [docs/agents/metadata.md](docs/agents/metadata.md)       |
 | 发版、changelog、CI 排查                               | [docs/agents/release.md](docs/agents/release.md)         |
 | 新增包                                                 | [docs/agents/new-package.md](docs/agents/new-package.md) |

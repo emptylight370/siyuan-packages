@@ -43,15 +43,15 @@
 | `sy-vite-component`（lib） | 思源风格基础控件（`SyButton`/`SyTextarea` 等），共享 lib：`packages/lib/sy-vite-component`       |
 | `src/i18n/`                | `en_US.json`、`zh_CN.json`（**下划线**命名，与 `plugin.json` 里的 `zh-CN` 键名不同）             |
 
-`plugin.json` **不是源文件**：由 `bazaar.json` 的 `types.plugin` 与包内 `meta.json` 经 `scripts/plugin-meta.mjs` 的 `resolvePluginMeta()` 合成，再由 `vite.config.ts` 的 `emitPluginJson` 插件写入 `dist/`。
+`plugin.json` **不是源文件**：由 `bazaar.json` 的 `types.plugin` 与包内 `meta.json` 经根工厂 `scripts/vite-plugin-config.ts` 的 `resolvePluginMeta()` 合成，再由 `emitPluginJson` 插件写入 `dist/`。
 
 ### 构建要点
 
-- `vite.config.ts` 顶层 `await resolvePluginMeta({ pkgDir: __dirname })` 取合并后的元数据
-- `viteStaticCopy` 复制 `README*.md`、`icon.png`（icon/preview 按存在与否过滤，本包无 `preview.png`）、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
+- `package.json` 的 `build` / `dev` 都是 `vite build`（watch 加 `--watch`），构建编排全部在根 `scripts/vite-plugin-config.ts` 工厂；watch 与 production 一律构建到包内 `dist/`
+- 工厂负责静态资源复制：readme 文件从 `meta.readme` 生成、`icon.png`（icon/preview 按存在与否过滤，本包无 `preview.png`）、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
 - 生产构建由 `vite-plugin-zip-pack` 打包 `dist/` 为 `package.zip`
 - 样式以内联进 `index.js` 为主；但 `SettingPage.vue` 的 scoped 样式块非空时，vite 会额外产出 `dist/index.css`（当前约 0.09 kB，思源会自动加载插件目录下的 `index.css`），不要再假设 `dist/` 里没有该文件
-- `siyuan` 依赖为 `^1.3.0`（与另两个包一致）
+- `@` 别名由 `vite-tsconfig-paths` 从包内 `tsconfig.json` 的 `paths` 读取；`siyuan` 依赖走 catalog（与另两个包一致）
 
 ### 关键约定
 

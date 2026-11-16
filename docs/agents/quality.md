@@ -20,7 +20,7 @@ lint 已从 ESLint 迁到 **oxlint**，配置在根 `.oxlintrc.json`：
 | 选项                                                                     | 值                                           | 依据                                                                                        |
 | ------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `target` / `lib`                                                         | `ES2022` / `ES2022` + `DOM` + `DOM.Iterable` | 思源桌面端用 latest-2 的 Electron，移动端 webview 最低 Chrome 95；`ES2022` 是安全上限       |
-| `module` / `moduleResolution`                                            | `ESNext` / `bundler`                         | 源码都由打包器处理（esbuild / vite），产物格式由构建脚本决定，与 tsconfig 无关              |
+| `module` / `moduleResolution`                                            | `ESNext` / `bundler`                         | 源码都由打包器处理（vite 8，内核 rolldown），产物格式由构建编排决定，与 tsconfig 无关       |
 | `strict`                                                                 | `true`                                       | 全包启用；涉及 class 属性、`catch` 变量、null 收窄，新增代码不得用包级 `strict: false` 降级 |
 | `isolatedModules`                                                        | `true`                                       | 与单文件转译一致，拦住只能靠类型信息完成的写法                                              |
 | `skipLibCheck` / `forceConsistentCasingInFileNames`                      | `true`                                       | 前者提速 IDE；后者防 Windows 本地通过、Linux CI 报错                                        |
