@@ -6,6 +6,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { resolve } from 'node:path';
 
+import { parse as parseTsConfig } from 'tsconfck';
+
 import { assertAssets, resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
 
 // watch 模式额外监听的文件，相对包目录（meta.json 与 bazaar.json 变更时元数据会变，须触发重建）
@@ -21,6 +23,7 @@ export interface CreatePluginViteConfigOptions {
         vue?: (...args: unknown[]) => unknown;
         fg: (patterns: string[]) => Promise<string[]>;
         minimist: (argv: string[]) => Record<string, unknown>;
+        tsconfigPaths: (options?: unknown) => unknown;
         viteStaticCopy: (options: unknown) => unknown;
         zipPack: (options: unknown) => unknown;
     };
@@ -40,80 +43,32 @@ interface EmitFileArgs {
     source: string;
 }
 
-/** rollup bundle 产物条目的最小形状（chunk 与 asset） */
+/** rollup bundle 产物条目的最小形状（仅需 chunk） */
 interface BundleEntry {
     type: string;
     code?: string;
-    source?: string | Uint8Array;
-    fileName?: string;
 }
 
 // LICENSE 必须包成 /*! ... */ 块注释（与官方 plugin-sample 产物一致）：裸文本会让产物
-// 成为非法 JS（Node require 直接语法错误），且 CSS 产物也需要同样的声明；
-// 内容中的 */ 转义为 * / 防止注释提前闭合
+// 成为非法 JS（Node require 直接语法错误）；内容中的 */ 转义为 * / 防止注释提前闭合
 function asLegalComment(text: string) {
     const body = text.trim().replaceAll('*/', '* /').replaceAll('\r\n', '\n');
     return `/*!\n * ${body.split('\n').join('\n * ')}\n */\n`;
 }
 
-// tsconfig 是 JSONC（允许注释），JSON.parse 前先剥离块注释与行注释；剥离时识别字符串边界，
-// 避免误伤路径里的 "//"（如 "https://..."）
-function parseJsonc(text: string): { compilerOptions?: { target?: string }; extends?: string } {
-    let out = '';
-    let inString = false;
-    for (let i = 0; i < text.length; i += 1) {
-        const ch = text[i];
-        if (inString) {
-            out += ch;
-            if (ch === '\\') {
-                out += text[i + 1] ?? '';
-                i += 1;
-                continue;
-            }
-            if (ch === '"') inString = false;
-            continue;
-        }
-        if (ch === '"') {
-            inString = true;
-            out += ch;
-            continue;
-        }
-        if (ch === '/' && text[i + 1] === '*') {
-            const end = text.indexOf('*/', i + 2);
-            i = end === -1 ? text.length : end + 1;
-            continue;
-        }
-        if (ch === '/' && text[i + 1] === '/') {
-            const end = text.indexOf('\n', i + 2);
-            i = end === -1 ? text.length : end - 1;
-            continue;
-        }
-        out += ch;
-    }
-    return JSON.parse(out);
-}
-
-// 语法目标与 tsconfig 对齐：从包内 tsconfig.json 沿 extends 链解析 compilerOptions.target
-// （ES2022 → es2022、ESNext → esnext），类型层与产物层单一来源、不漂移
+// 语法目标与 tsconfig 对齐：tsconfck 解析包内 tsconfig.json（扁平化 extends 链、兼容 JSONC 注释，
+// 与 Volar 系工具同一实现），ES2022 → es2022、ESNext → esnext；类型层与产物层单一来源、不漂移
 async function resolveBuildTarget(pkgDir: string): Promise<string> {
-    let file = path.join(pkgDir, 'tsconfig.json');
-    for (let depth = 0; depth < 5; depth += 1) {
-        if (existsSync(file)) {
-            const config = parseJsonc(await fs.readFile(file, 'utf8'));
-            const target = config.compilerOptions?.target;
-            if (target) {
-                return target.toLowerCase();
-            }
-            if (!config.extends) {
-                break;
-            }
-            // extends 指向相对路径且含文件名（如 ../../../tsconfig.base.json）
-            file = path.resolve(path.dirname(file), config.extends);
-            continue;
-        }
-        file = path.join(path.dirname(file), '..', path.basename(file));
+    const file = path.join(pkgDir, 'tsconfig.json');
+    if (!existsSync(file)) {
+        throw new Error(`包目录缺少 tsconfig.json，无法确定构建语法目标: ${pkgDir}`);
     }
-    throw new Error('无法从 tsconfig 解析 compilerOptions.target，构建语法目标未知');
+    const { tsconfig } = await parseTsConfig(file);
+    const target = tsconfig.compilerOptions?.target;
+    if (!target) {
+        throw new Error('无法从 tsconfig 解析 compilerOptions.target，构建语法目标未知');
+    }
+    return target.toLowerCase();
 }
 
 export function createPluginViteConfig({
@@ -121,7 +76,7 @@ export function createPluginViteConfig({
     deps,
     watchFiles = DEFAULT_WATCH_FILES,
 }: CreatePluginViteConfigOptions): unknown {
-    const { defineConfig, vue, fg, minimist, viteStaticCopy, zipPack } = deps;
+    const { defineConfig, vue, fg, minimist, tsconfigPaths, viteStaticCopy, zipPack } = deps;
     let pluginInfo: PluginMeta | undefined;
 
     const emitPluginJson = {
@@ -144,8 +99,9 @@ export function createPluginViteConfig({
         const args = minimist(process.argv.slice(2));
         const isWatch = args.watch || args.w || false;
 
-        // LICENSE banner 仅生产构建注入（与原 esbuild 路线行为一致），给 JS chunk 与 CSS asset 前置 /*! ... */
-        // enforce: 'post' 保证排在 vite:css-post 之后——CSS asset 由后者在 generateBundle 阶段产出
+        // LICENSE banner 仅生产构建注入，给 JS chunk 前置 /*! ... */ 块注释（与官方 plugin-sample
+        // 产物一致）；CSS 产物不注入——思源加载 CSS 不需要许可证声明。
+        // 不能用 rollup 原生 output.banner：vite 8 底层 rolldown 未实现该选项（实测静默不生效）
         let license: string | undefined;
         if (!isWatch) {
             try {
@@ -162,13 +118,6 @@ export function createPluginViteConfig({
                 for (const file of Object.values(bundle)) {
                     if (file.type === 'chunk' && typeof file.code === 'string') {
                         file.code = `${license}${file.code}`;
-                    } else if (
-                        file.type === 'asset' &&
-                        typeof file.fileName === 'string' &&
-                        /\.(css|js)$/.test(file.fileName) &&
-                        typeof file.source === 'string'
-                    ) {
-                        file.source = `${license}${file.source}`;
                     }
                 }
             },
@@ -181,13 +130,10 @@ export function createPluginViteConfig({
         console.log('distDir=>', './dist');
 
         return {
-            resolve: {
-                alias: {
-                    '@': resolve(pkgDir, 'src'),
-                },
-            },
-
             plugins: [
+                // '@' 等别名由 vite-tsconfig-paths 从包内 tsconfig.json 的 paths 读取（单一来源）；
+                // 包内 tsconfig 必须声明所用别名
+                tsconfigPaths(),
                 ...(vue ? [vue()] : []),
                 // icon/preview 为可选资源，按包内是否存在过滤；publish.resources（如字体包的 fonts/）
                 // 为 meta.json 声明的额外发布资源，目录条目保留目录名整树复制

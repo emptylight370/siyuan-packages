@@ -15,8 +15,9 @@
 
 1. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`），不要提交 `plugin.json`（构建产物）；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
 2. 构建接入（全部包统一 vite）：
-   - 新建包内 `vite.config.ts` 转发根工厂 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, fg, minimist, viteStaticCopy, zipPack } })`；有 `.vue` 源码的包额外传 `vue`（`deps.vue` 可选）
-   - 工厂已内置：`emitPluginJson` 输出产物 `plugin.json`、i18n `stripBase`、LICENSE banner（生产构建注入 JS/CSS）、`publish.resources` 复制（如字体包的 `fonts/`）、`build.target` 从 tsconfig 链解析；watch 监听 `./meta.json` 与根 `../../../bazaar.json`
+   - 新建包内 `vite.config.ts` 转发根工厂 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, fg, minimist, tsconfigPaths, viteStaticCopy, zipPack } })`；有 `.vue` 源码的包额外传 `vue`（`deps.vue` 可选）
+   - 工厂已内置：`emitPluginJson` 输出产物 `plugin.json`、i18n `stripBase`、LICENSE banner（生产构建注入 JS chunk）、`publish.resources` 复制（如字体包的 `fonts/`）、`build.target` 由 tsconfck 从 tsconfig 解析；watch 监听 `./meta.json` 与根 `../../../bazaar.json`
+   - 包内 `tsconfig.json` 必须声明源码用到的路径别名（如 `"@/*": ["./src/*"]`）——别名由 `vite-tsconfig-paths` 从 tsconfig `paths` 读取，工厂不再手写 alias；`tsconfig.json` 继承 `../../../tsconfig.base.json`
    - watch 与 production 一律构建到包内 `dist/`（调试走根 `deploy` 任务）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
    - CSS/SCSS 引用**包外运行时路径**（思源挂载路径，如 `../plugins/<pkg>/fonts/*.woff`）会被 vite 报「didn't resolve at build time」警告并原样保留——预期行为，不要改成包内相对路径
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐

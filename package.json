@@ -27,6 +27,7 @@
     "@types/minimist": "^1.2.5",
     "@types/node": "^26.6.6",
     "oxlint": "^1.93.0",
+    "tsconfck": "^3.1.6",
     "typescript": "^7.0.2"
   }
 }
