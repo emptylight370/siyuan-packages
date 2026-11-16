@@ -27,3 +27,7 @@
 模板仓库：[TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji](https://github.com/TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji)
 
 支持开发：[链接](https://blog.emptylight.cn/sponsor)
+
+## 许可
+
+插件代码以 [MIT 许可证](LICENSE) 发布。随包分发的字体文件（阿里巴巴普惠体，`fonts/`）**不受 MIT 许可约束**——版权归阿里巴巴所有，以[字体官方页面](https://www.alibabafonts.com/#/font)发布的许可为准（[许可文本](https://www.yuque.com/yiguang-wkqc2/puhuiti/nus9wiinq4aeiegy)，亦随包附带于 `fonts/LICENSE-AlibabaPuHuiTi.md`）。

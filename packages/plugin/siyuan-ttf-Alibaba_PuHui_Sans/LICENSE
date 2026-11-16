@@ -1,10 +1,10 @@
-Please notice, the fonts included is not covered by MIT License. They have their
-own legal notice, you can find the latest license on this website:
-https://www.yuque.com/yiguang-wkqc2/puhuiti/nus9wiinq4aeiegy. The fonts were
-downloaded from the official website as README said, and all the fonts included
-were extracted from the compressed package downloaded from the official website.
+# License
+
+## Software (plugin code)
 
 MIT License
+
+Copyright (c) 2024-2026 EmptyLight
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,3 +23,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Fonts
+
+The font files in the `fonts/` directory (Alibaba PuHuiTi, 阿里巴巴普惠体) are
+copyright © Alibaba and are **not** covered by the MIT license above. Their
+legal notice can be found at https://www.yuque.com/yiguang-wkqc2/puhuiti/nus9wiinq4aeiegy
+(latest version governs); see also `fonts/LICENSE-AlibabaPuHuiTi.md`.
+The fonts were downloaded from the official website as README said, and all
+the fonts included were extracted unmodified from the compressed package
+downloaded from the official website.

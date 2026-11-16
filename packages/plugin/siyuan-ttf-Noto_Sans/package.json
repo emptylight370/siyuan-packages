@@ -8,7 +8,7 @@
     "build": "vite build",
     "clean": "rimraf dist package.zip"
   },
-  "license": "MIT",
+  "license": "(MIT AND OFL-1.1)",
   "devDependencies": {
     "fast-glob": "catalog:",
     "minimist": "catalog:",

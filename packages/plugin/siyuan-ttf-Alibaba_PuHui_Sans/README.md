@@ -27,3 +27,12 @@ This plugin may not be compatible with other fonts or Emoji plugins in the bazaa
 Template repo：[TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji](https://github.com/TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji)
 
 Support development: [Link](https://emptylight370.github.io/sponsor)
+
+## License
+
+The plugin code is licensed under the [MIT License](LICENSE).
+The bundled font files (Alibaba PuHuiTi, `fonts/`) are **not** covered by the
+MIT license — they are copyright © Alibaba and governed by their own license
+published at the [official font page](https://www.alibabafonts.com/#/font)
+([license text](https://www.yuque.com/yiguang-wkqc2/puhuiti/nus9wiinq4aeiegy),
+also bundled in `fonts/LICENSE-AlibabaPuHuiTi.md`).

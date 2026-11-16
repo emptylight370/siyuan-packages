@@ -33,3 +33,12 @@ The font files comes from: [Noto - Google Fonts](https://fonts.google.com/noto),
 Template repo: [TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji](https://github.com/TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji)
 
 Support development: [Link](https://emptylight370.github.io/sponsor)
+
+## License
+
+The plugin code is licensed under the [MIT License](LICENSE).
+The bundled font files (Noto Sans / SC / TC / JP, `fonts/`) are **not** covered
+by the MIT license — they are © The Noto Project Authors and licensed under
+the [SIL Open Font License 1.1](https://openfontlicense.org/), full license
+texts bundled in `fonts/OFL_*.txt` (package license:
+`(MIT AND OFL-1.1)`).

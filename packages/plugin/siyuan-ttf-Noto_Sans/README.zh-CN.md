@@ -33,3 +33,7 @@
 模板仓库：[TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji](https://github.com/TCOTC/siyuan-ttf-HarmonyOS_Sans_SC-and-Twemoji)
 
 支持开发：[链接](https://blog.emptylight.cn/sponsor)
+
+## 许可
+
+插件代码以 [MIT 许可证](LICENSE) 发布。随包分发的字体文件（Noto Sans / SC / TC / JP，`fonts/`）**不受 MIT 许可约束**——© The Noto Project Authors，以 [SIL 开源字体许可 1.1](https://openfontlicense.org/) 授权，许可全文随包附带于 `fonts/OFL_*.txt`（包许可表达式：`(MIT AND OFL-1.1)`）。
