@@ -17,11 +17,6 @@
     "importHelpers": true,
     "noEmit": true
   },
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ],
   "include": ["tools/**/*.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"],
   "exclude": ["node_modules", "src/abandon"],
   "root": "."

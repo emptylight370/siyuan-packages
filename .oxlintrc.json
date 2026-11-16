@@ -7,14 +7,7 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": [
-    "**/dist/**",
-    "**/node_modules/**",
-    "**/package.zip",
-    "packages/plugin/*/index.js",
-    "packages/plugin/*/index.css",
-    "packages/plugin/*/i18n/**"
-  ],
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/package.zip"],
   "rules": {
     "constructor-super": "off",
     "for-direction": "error",

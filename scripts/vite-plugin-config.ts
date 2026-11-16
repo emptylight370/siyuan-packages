@@ -13,20 +13,26 @@ import { assertAssets, resolvePluginMeta, type PluginMeta } from './plugin-meta.
 // watch 模式额外监听的文件，相对包目录（meta.json 与 bazaar.json 变更时元数据会变，须触发重建）
 const DEFAULT_WATCH_FILES = ['src/i18n/*.json', './README*.md', './meta.json', '../../../bazaar.json'];
 
+/**
+ * 包内传入的 vite 辅助函数与插件构造器。成员一律用方法语法声明：TS 对方法参数做双向
+ * 协变检查，具体插件的窄参数类型（如 ViteStaticCopyOptions）才能赋值进来；若写成
+ * 函数属性（箭头类型），strictFunctionTypes 的参数逆变会要求 unknown 可赋给窄类型而报错。
+ */
+export interface CreatePluginViteConfigDeps {
+    /** 纯 TS/TS+SCSS 包可不传；有 .vue 源码的包传 @vitejs/plugin-vue */
+    vue?(...args: unknown[]): unknown;
+    defineConfig(config: unknown): unknown;
+    fg(patterns: string[]): Promise<string[]>;
+    minimist(argv: string[]): Record<string, unknown>;
+    tsconfigPaths(options?: unknown): unknown;
+    viteStaticCopy(options: unknown): unknown;
+    zipPack(options: unknown): unknown;
+}
+
 export interface CreatePluginViteConfigOptions {
     /** 插件包目录，vite.config.ts 内传 `import.meta.dirname` */
     pkgDir: string;
-    /** 包内解析的 vite 辅助函数与插件构造器（包内 import 后整体传入） */
-    deps: {
-        defineConfig: (config: unknown) => unknown;
-        /** 纯 TS/TS+SCSS 包可不传；有 .vue 源码的包传 @vitejs/plugin-vue */
-        vue?: (...args: unknown[]) => unknown;
-        fg: (patterns: string[]) => Promise<string[]>;
-        minimist: (argv: string[]) => Record<string, unknown>;
-        tsconfigPaths: (options?: unknown) => unknown;
-        viteStaticCopy: (options: unknown) => unknown;
-        zipPack: (options: unknown) => unknown;
-    };
+    deps: CreatePluginViteConfigDeps;
     /** watch 模式额外监听的文件（相对包目录），缺省含 i18n、README、meta.json 与根 bazaar.json */
     watchFiles?: string[];
 }
