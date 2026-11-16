@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { resolve } from 'node:path';
 
-import { resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
+import { assertAssets, resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
 
 // watch 模式额外监听的文件，相对包目录（meta.json 与 bazaar.json 变更时元数据会变，须触发重建）
 const DEFAULT_WATCH_FILES = ['src/i18n/*.json', './README*.md', './meta.json', '../../../bazaar.json'];
@@ -146,7 +146,14 @@ export function createPluginViteConfig({
 
         // LICENSE banner 仅生产构建注入（与原 esbuild 路线行为一致），给 JS chunk 与 CSS asset 前置 /*! ... */
         // enforce: 'post' 保证排在 vite:css-post 之后——CSS asset 由后者在 generateBundle 阶段产出
-        const license = isWatch ? undefined : asLegalComment(await fs.readFile(path.join(pkgDir, 'LICENSE'), 'utf8'));
+        let license: string | undefined;
+        if (!isWatch) {
+            try {
+                license = asLegalComment(await fs.readFile(path.join(pkgDir, 'LICENSE'), 'utf8'));
+            } catch (error) {
+                throw new Error('包目录缺少 LICENSE，无法注入许可证声明', { cause: error });
+            }
+        }
         const licenseBanner = {
             name: 'license-banner',
             enforce: 'post',
@@ -186,10 +193,14 @@ export function createPluginViteConfig({
                 // 为 meta.json 声明的额外发布资源，目录条目保留目录名整树复制
                 viteStaticCopy({
                     targets: [
-                        {
-                            src: './README*.md',
-                            dest: './',
-                        },
+                        // readme 文件从 meta.readme 生成（字符串或 {default, zh-CN} 两种形状），
+                        // 声明是唯一来源：约定式 README*.md glob 会漏复制非 README 命名的自定义 readme
+                        ...(() => {
+                            const readme = pluginInfo?.readme;
+                            const files =
+                                typeof readme === 'string' ? [readme] : [...new Set(Object.values(readme ?? {}))];
+                            return files.map((file) => ({ src: `./${file}`, dest: './' }));
+                        })(),
                         ...['icon.png', 'preview.png']
                             .filter((name) => existsSync(resolve(pkgDir, name)))
                             .map((name) => ({
@@ -214,6 +225,14 @@ export function createPluginViteConfig({
                     ],
                 }),
                 licenseBanner,
+                // dist 级复验（补回原 esbuild 路线的最后一道闸）：readme/icon/preview/publish.resources
+                // 必须都在 dist 中。closeBundle 在 rollupOptions.plugins 的 zipPack 之前执行，zip 前拦住
+                {
+                    name: 'dist-audit',
+                    async closeBundle() {
+                        await assertAssets(pluginInfo!, resolve(pkgDir, 'dist'));
+                    },
+                },
             ],
 
             // https://github.com/vitejs/vite/issues/1930
