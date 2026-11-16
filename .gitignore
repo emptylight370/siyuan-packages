@@ -16,7 +16,4 @@ lefthook-local.yml
 .lefthook-local/
 
 # build package
-index.js
-index.css
-packages/plugin/*/i18n/
-packages/plugin/*/plugin.json
+# （全部包走 vite 工厂构建，产物只落在包内 dist/；plugin.json 与 i18n 不再出现在包根）

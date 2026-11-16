@@ -1,5 +1,5 @@
 // 元数据合成共享模块：把 bazaar.json 的类型模板与包内 meta.json 合并为集市规范的 plugin.json
-// 同时供 scripts/build-plugin.ts（esbuild 构建）与包内 vite.config.ts（vite 构建）使用
+// 供包内 vite.config.ts（经 scripts/vite-plugin-config.ts 工厂）与 scripts/check-packages.ts 使用
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 

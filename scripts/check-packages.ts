@@ -1,7 +1,7 @@
 // 仓库结构校验：不构建、不产生物，只检查各发布包的静态契约。
 // 供 `pnpm check` 与 lefthook pre-commit 调用；与构建期校验的分工：
 // - 这里管「包的形状」：清单字段、资源文件、命名约定（所有发布包全量查）；
-// - build-plugin.ts 管「本次构建」：TAG_VERSION 一致性、输出目录资源。
+// - 构建期（vite 工厂）管「本次构建」：TAG_VERSION 一致性、输出目录资源。
 // 检测项刻意精简：复用 resolvePluginMeta 覆盖清单与资源，额外只补纯静态规则。
 import { promises as fs } from 'node:fs';
 import path from 'node:path';

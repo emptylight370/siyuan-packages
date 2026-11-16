@@ -10,7 +10,7 @@
 | 差异 | `packages/<type>/<pkg>/meta.json`          | 包独有字段（`icon` / `preview` 可选声明），`version` 是唯一版本来源                     |
 | 产物 | `<outDir>/<type>.json`（即 `plugin.json`） | 合并结果，进 `package.zip`                                                              |
 
-`scripts/plugin-meta.ts` 的 `resolvePluginMeta()` 负责：`bazaar.types[type]` 与 `meta.json` 深合并（对象递归、数组整体替换）→ `${owner}/${name}/${version}` 占位符替换 → 派生 `name`（目录名）、`url`（`https://github.com/<owner>/<name>`）、`version` → 校验。构建脚本（`build-plugin.ts` / vite 工厂）与 `check-packages.ts` 共用同一实现，标准不会分叉。
+`scripts/plugin-meta.ts` 的 `resolvePluginMeta()` 负责：`bazaar.types[type]` 与 `meta.json` 深合并（对象递归、数组整体替换）→ `${owner}/${name}/${version}` 占位符替换 → 派生 `name`（目录名）、`url`（`https://github.com/<owner>/<name>`）、`version` → 校验。构建编排（vite 工厂 `scripts/vite-plugin-config.ts`）与 `check-packages.ts` 共用同一实现，标准不会分叉。
 
 规则：`meta.json` **禁止**出现 `name` / `url`（构建期派生，出现即报错）；9 个必填字段缺失即失败（`minAppVersion` 非必填——集市缺省视为全版本适用，仅推荐填写，`pnpm check` 会对缺失给警告；`icon` / `preview` 亦非必填，声明了才校验资源存在）；已声明的 `readme` / `icon` / `preview` / `publish.resources` 必须在产物目录存在；环境变量 `TAG_VERSION` 存在时必须等于 `meta.version`。
 
@@ -29,7 +29,7 @@
 
 ## 元数据字段校验
 
-集市规则的校验由 `pnpm check`（`scripts/check-packages.ts`）承担，pre-commit 由 lefthook 触发，也可手动在仓库根运行。规则来源是 `siyuan-note/plugin-sample` 的 README 与 `plugin.json`（0.5.2）以及集市规则（`siyuan-note/bazaar` 的 `rules/`）。**不构建**，全量校验各发布包（`packages/*/*` 下含 `meta.json` 的目录）的静态契约；构建期校验（TAG_VERSION 一致性、输出目录资源）仍由 `build-plugin.ts` 负责。
+集市规则的校验由 `pnpm check`（`scripts/check-packages.ts`）承担，pre-commit 由 lefthook 触发，也可手动在仓库根运行。规则来源是 `siyuan-note/plugin-sample` 的 README 与 `plugin.json`（0.5.2）以及集市规则（`siyuan-note/bazaar` 的 `rules/`）。**不构建**，全量校验各发布包（`packages/*/*` 下含 `meta.json` 的目录）的静态契约；构建期校验（TAG_VERSION 一致性、输出目录资源）由 vite 工厂在构建时负责。
 
 | 检测项                        | 规则                                                                                                                                                                        | 来源                          |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |

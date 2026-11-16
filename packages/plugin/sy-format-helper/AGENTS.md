@@ -8,14 +8,14 @@
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `pnpm install`（仓库根）                                 | 安装全部 workspace 依赖                                                                      |
 | `pnpm --filter sy-format-helper build`                   | 生产构建，产出 `dist/` 与 `package.zip`                                                      |
-| `pnpm --filter sy-format-helper dev`                     | esbuild watch，产物写到包根，便于软链到思源插件目录调试                                      |
+| `pnpm --filter sy-format-helper dev`                     | vite watch，构建到包内 `dist/`（不压缩），调试走根 `deploy` 任务                             |
 | `mise run //packages/plugin/sy-format-helper:build`      | 上述 build 的 mise 任务形式（别名 `node:sy-format-helper#build`；`dev`/`clean`/`lint` 同理） |
 | `mise run deploy -- -package sy-format-helper`           | 构建并把 `dist/` 镜像同步到 `data/plugins/sy-format-helper`                                  |
 | `mise -C packages/plugin/sy-format-helper run changelog` | 由 git-cliff 生成 `whatschange.md`                                                           |
 
 ## 架构
 
-格式化文本块的插件。构建栈是 **esbuild**（根 `scripts/build-plugin.mjs`），包内没有 `vite.config.ts`。
+格式化文本块的插件。构建栈是 **Vite**（包内 `vite.config.ts` 转发根 `scripts/vite-plugin-config.ts` 工厂）。
 
 ### 插件生命周期
 
@@ -50,9 +50,9 @@
 
 ### 构建要点
 
-- `package.json` 的 `build` / `dev` 都转发到 `node ../../../scripts/build-plugin.mjs`，包内没有构建实现
-- 构建脚本先 `copyAssets`（README、`icon.png`、`preview.png`、`src/i18n/**`），再用 `resolvePluginMeta` 合成 `plugin.json`，最后 esbuild 打包并在生产模式注入 LICENSE banner
-- sass 通过自定义 esbuild 插件编译，产物为 `dist/index.css` 与 `dist/index.js`
+- `package.json` 的 `build` / `dev` 都是 `vite build`（watch 加 `--watch`），构建编排全部在根 `scripts/vite-plugin-config.ts` 工厂
+- 工厂负责静态资源复制（README、`icon.png`、`preview.png`、`src/i18n/**`）、`resolvePluginMeta` 合成 `plugin.json`、生产构建注入 LICENSE banner 与打 `package.zip`
+- SCSS 由 vite 内置 sass 编译，产物为 `dist/index.css` 与 `dist/index.js`
 - `whatschange.old.md` 是 0.7.1 及更早的历史存档，`changelog` 任务会把它追加到 `whatschange.md` 末尾，**不要删除或重命名**
 
 ### 关键约定

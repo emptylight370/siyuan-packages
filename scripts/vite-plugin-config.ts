@@ -1,7 +1,9 @@
-// vite 插件包共用的 vite 配置工厂（vite-vue 模板包共用，包内 vite.config.ts 只保留 pkgDir 与差异项）。
+// vite 插件包共用的 vite 配置工厂（全部插件包共用，包内 vite.config.ts 只保留 pkgDir 与差异项）。
 // 注意：本文件位于 scripts/，pnpm 隔离的 node_modules 解析不到包内 devDependencies，
-// 因此 vite 辅助函数（defineConfig/loadEnv）与插件实例必须由包内传入（deps），这里只做编排。
+// 因此 vite 辅助函数（defineConfig）与插件实例必须由包内传入（deps），这里只做编排。
+import { promises as fs } from 'node:fs';
 import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { resolve } from 'node:path';
 
 import { resolvePluginMeta, type PluginMeta } from './plugin-meta.ts';
@@ -15,7 +17,8 @@ export interface CreatePluginViteConfigOptions {
     /** 包内解析的 vite 辅助函数与插件构造器（包内 import 后整体传入） */
     deps: {
         defineConfig: (config: unknown) => unknown;
-        vue: (...args: unknown[]) => unknown;
+        /** 纯 TS/TS+SCSS 包可不传；有 .vue 源码的包传 @vitejs/plugin-vue */
+        vue?: (...args: unknown[]) => unknown;
         fg: (patterns: string[]) => Promise<string[]>;
         minimist: (argv: string[]) => Record<string, unknown>;
         viteStaticCopy: (options: unknown) => unknown;
@@ -35,6 +38,82 @@ interface EmitFileArgs {
     type: string;
     fileName: string;
     source: string;
+}
+
+/** rollup bundle 产物条目的最小形状（chunk 与 asset） */
+interface BundleEntry {
+    type: string;
+    code?: string;
+    source?: string | Uint8Array;
+    fileName?: string;
+}
+
+// LICENSE 必须包成 /*! ... */ 块注释（与官方 plugin-sample 产物一致）：裸文本会让产物
+// 成为非法 JS（Node require 直接语法错误），且 CSS 产物也需要同样的声明；
+// 内容中的 */ 转义为 * / 防止注释提前闭合
+function asLegalComment(text: string) {
+    const body = text.trim().replaceAll('*/', '* /').replaceAll('\r\n', '\n');
+    return `/*!\n * ${body.split('\n').join('\n * ')}\n */\n`;
+}
+
+// tsconfig 是 JSONC（允许注释），JSON.parse 前先剥离块注释与行注释；剥离时识别字符串边界，
+// 避免误伤路径里的 "//"（如 "https://..."）
+function parseJsonc(text: string): { compilerOptions?: { target?: string }; extends?: string } {
+    let out = '';
+    let inString = false;
+    for (let i = 0; i < text.length; i += 1) {
+        const ch = text[i];
+        if (inString) {
+            out += ch;
+            if (ch === '\\') {
+                out += text[i + 1] ?? '';
+                i += 1;
+                continue;
+            }
+            if (ch === '"') inString = false;
+            continue;
+        }
+        if (ch === '"') {
+            inString = true;
+            out += ch;
+            continue;
+        }
+        if (ch === '/' && text[i + 1] === '*') {
+            const end = text.indexOf('*/', i + 2);
+            i = end === -1 ? text.length : end + 1;
+            continue;
+        }
+        if (ch === '/' && text[i + 1] === '/') {
+            const end = text.indexOf('\n', i + 2);
+            i = end === -1 ? text.length : end - 1;
+            continue;
+        }
+        out += ch;
+    }
+    return JSON.parse(out);
+}
+
+// 语法目标与 tsconfig 对齐：从包内 tsconfig.json 沿 extends 链解析 compilerOptions.target
+// （ES2022 → es2022、ESNext → esnext），类型层与产物层单一来源、不漂移
+async function resolveBuildTarget(pkgDir: string): Promise<string> {
+    let file = path.join(pkgDir, 'tsconfig.json');
+    for (let depth = 0; depth < 5; depth += 1) {
+        if (existsSync(file)) {
+            const config = parseJsonc(await fs.readFile(file, 'utf8'));
+            const target = config.compilerOptions?.target;
+            if (target) {
+                return target.toLowerCase();
+            }
+            if (!config.extends) {
+                break;
+            }
+            // extends 指向相对路径且含文件名（如 ../../../tsconfig.base.json）
+            file = path.resolve(path.dirname(file), config.extends);
+            continue;
+        }
+        file = path.join(path.dirname(file), '..', path.basename(file));
+    }
+    throw new Error('无法从 tsconfig 解析 compilerOptions.target，构建语法目标未知');
 }
 
 export function createPluginViteConfig({
@@ -65,6 +144,29 @@ export function createPluginViteConfig({
         const args = minimist(process.argv.slice(2));
         const isWatch = args.watch || args.w || false;
 
+        // LICENSE banner 仅生产构建注入（与原 esbuild 路线行为一致），给 JS chunk 与 CSS asset 前置 /*! ... */
+        // enforce: 'post' 保证排在 vite:css-post 之后——CSS asset 由后者在 generateBundle 阶段产出
+        const license = isWatch ? undefined : asLegalComment(await fs.readFile(path.join(pkgDir, 'LICENSE'), 'utf8'));
+        const licenseBanner = {
+            name: 'license-banner',
+            enforce: 'post',
+            generateBundle(this: unknown, _options: unknown, bundle: Record<string, BundleEntry>) {
+                if (!license) return;
+                for (const file of Object.values(bundle)) {
+                    if (file.type === 'chunk' && typeof file.code === 'string') {
+                        file.code = `${license}${file.code}`;
+                    } else if (
+                        file.type === 'asset' &&
+                        typeof file.fileName === 'string' &&
+                        /\.(css|js)$/.test(file.fileName) &&
+                        typeof file.source === 'string'
+                    ) {
+                        file.source = `${license}${file.source}`;
+                    }
+                }
+            },
+        };
+
         console.log();
         console.log('isWatch=>', isWatch);
         // watch 与 production 一律构建到包内 dist/；调试用根任务 mise run deploy 镜像同步，
@@ -79,8 +181,9 @@ export function createPluginViteConfig({
             },
 
             plugins: [
-                vue(),
-                // icon/preview 为可选资源，按包内是否存在过滤（与 esbuild 版 copyAssets 行为一致）
+                ...(vue ? [vue()] : []),
+                // icon/preview 为可选资源，按包内是否存在过滤；publish.resources（如字体包的 fonts/）
+                // 为 meta.json 声明的额外发布资源，目录条目保留目录名整树复制
                 viteStaticCopy({
                     targets: [
                         {
@@ -93,13 +196,24 @@ export function createPluginViteConfig({
                                 src: `./${name}`,
                                 dest: './',
                             })),
-                        {
-                            src: './src/i18n/**',
-                            dest: './i18n/',
-                            rename: { stripBase: 2 },
-                        },
+                        // i18n 为可选资源：无 src/i18n 的包（字体包）跳过，viteStaticCopy 对空匹配 glob 会报错
+                        ...(existsSync(resolve(pkgDir, 'src/i18n'))
+                            ? [
+                                  {
+                                      src: './src/i18n/**',
+                                      dest: './i18n/',
+                                      rename: { stripBase: 2 },
+                                  },
+                              ]
+                            : []),
+                        ...(pluginInfo?.publish?.resources ?? []).map((resource) => ({
+                            src: resource.endsWith('/') ? `./${resource.slice(0, -1)}` : `./${resource}`,
+                            dest: './',
+                            structured: true,
+                        })),
                     ],
                 }),
+                licenseBanner,
             ],
 
             // https://github.com/vitejs/vite/issues/1930
@@ -121,6 +235,9 @@ export function createPluginViteConfig({
 
                 // 不压缩，用于调试
                 minify: !isWatch,
+
+                // 语法目标与 tsconfig 的 target 对齐（当前基线 ES2022）
+                target: await resolveBuildTarget(pkgDir),
 
                 lib: {
                     entry: resolve(pkgDir, 'src/index.ts'),

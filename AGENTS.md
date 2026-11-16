@@ -6,12 +6,12 @@
 
 ## 项目快照
 
-| 项       | 当前值                                                                                                |
-| -------- | ----------------------------------------------------------------------------------------------------- |
-| 包组     | `packages/plugin/*`（发布包）、`packages/lib/*`（内部共享 lib，不发布）                               |
-| 包管理器 | pnpm（mise 管运行时与 CLI：node / pnpm / prettier / git-cliff / lefthook）                            |
-| 构建系统 | 根 `scripts/build-plugin.ts`（esbuild 包）与 `scripts/vite-plugin-config.ts`（vite 包），无 Turborepo |
-| 测试     | 无测试框架；质量门禁是 `pnpm lint`、`prettier -c .`、`pnpm check`、`pnpm -r build` 四者               |
+| 项       | 当前值                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| 包组     | `packages/plugin/*`（发布包）、`packages/lib/*`（内部共享 lib，不发布）                             |
+| 包管理器 | pnpm（mise 管运行时与 CLI：node / pnpm / prettier / git-cliff / lefthook）                          |
+| 构建系统 | 全部包统一 vite：根 `scripts/vite-plugin-config.ts` 工厂 + 包内 `vite.config.ts` 转发，无 Turborepo |
+| 测试     | 无测试框架；质量门禁是 `pnpm lint`、`prettier -c .`、`pnpm check`、`pnpm -r build` 四者             |
 
 ## Context Index
 
@@ -31,9 +31,9 @@
 ```bash
 mise install                      # 安装 node / pnpm / prettier / git-cliff / lefthook
 pnpm install                      # 安装根与所有 workspace 包的依赖
-pnpm -r build                     # 构建全部包（各包调用根 scripts/build-plugin.ts）
+pnpm -r build                     # 构建全部包（各包 vite 构建，产物在包内 dist/）
 pnpm --filter sy-format-helper build   # 单包 production 构建，产出 <pkg>/dist 与 <pkg>/package.zip
-pnpm --filter sy-format-helper dev     # esbuild watch，产物写到包根，便于软链到思源插件目录调试
+pnpm --filter sy-format-helper dev     # vite watch，构建到包内 dist/（调试走 deploy 任务）
 pnpm lint                         # oxlint packages
 pnpm lint:fix                     # 同上并自动修复
 pnpm check                        # 校验各发布包的元数据契约（见 metadata.md）

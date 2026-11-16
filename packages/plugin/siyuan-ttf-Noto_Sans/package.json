@@ -1,18 +1,22 @@
 {
   "name": "siyuan-ttf-Noto_Sans",
   "version": "0.5.3",
+  "type": "module",
   "scripts": {
     "lint": "oxlint . --fix",
-    "dev": "node ../../../scripts/build-plugin.ts --watch",
-    "build": "node ../../../scripts/build-plugin.ts --production",
+    "dev": "vite build --watch",
+    "build": "vite build",
     "clean": "rimraf dist package.zip"
   },
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.28.2",
-    "jszip": "^3.10.1",
+    "fast-glob": "catalog:",
+    "minimist": "catalog:",
     "rimraf": "catalog:",
     "sass": "catalog:",
-    "siyuan": "catalog:"
+    "siyuan": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-static-copy": "catalog:",
+    "vite-plugin-zip-pack": "catalog:"
   }
 }

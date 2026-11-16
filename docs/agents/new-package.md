@@ -14,11 +14,11 @@
 ## 共通改造
 
 1. 把源 `plugin.json` 拆成 `meta.json`（独有字段 + `version`），不要提交 `plugin.json`（构建产物）；`author`、`backends`、`disabledInPublish`、`icon`、`preview`、`readme`、`funding` 由 `bazaar.json` 提供，不要写进 meta；多语言键用横线 `zh-CN`（与 `i18n/zh_CN.json` 的下划线不同）
-2. 构建接入：
-   - **esbuild 包**（无 `vite.config.ts`）：`package.json` 的 `build` / `dev` 指向 `../../../scripts/build-plugin.ts`
-   - `meta.json` 声明的 `publish.resources`（如字体包的 `fonts/`）由构建脚本复制进产物目录，无需在包内写复制逻辑
-   - CSS/SCSS 引用**包外运行时路径**（思源挂载路径，如 `../plugins/<pkg>/fonts/*.woff`）时依赖根脚本的 `external: ['siyuan', '../plugins/*']`，包内不要写复制逻辑；也不能改成 `../*`（会吞掉 CSS 产物）
-   - **vite 包**：包内 `vite.config.ts` 改为转发根 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, vue, fg, minimist, viteStaticCopy, zipPack } })`（含 `emitPluginJson` 输出产物 `plugin.json` 与 i18n `stripBase`）；源码 `@/../plugin.json` → `@/../meta.json`；watch 监听 `./meta.json` 与根 `../../../bazaar.json`（工厂默认已含）；watch 与 production 一律构建到包内 `dist/`（工厂已移除 `VITE_SIYUAN_WORKSPACE_PATH` 直写工作空间与 livereload 逻辑，调试走根 `deploy` 任务）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
+2. 构建接入（全部包统一 vite）：
+   - 新建包内 `vite.config.ts` 转发根工厂 `createPluginViteConfig({ pkgDir: import.meta.dirname, deps: { defineConfig, fg, minimist, viteStaticCopy, zipPack } })`；有 `.vue` 源码的包额外传 `vue`（`deps.vue` 可选）
+   - 工厂已内置：`emitPluginJson` 输出产物 `plugin.json`、i18n `stripBase`、LICENSE banner（生产构建注入 JS/CSS）、`publish.resources` 复制（如字体包的 `fonts/`）、`build.target` 从 tsconfig 链解析；watch 监听 `./meta.json` 与根 `../../../bazaar.json`
+   - watch 与 production 一律构建到包内 `dist/`（调试走根 `deploy` 任务）；`tsconfig.json` 继承 `../../../tsconfig.base.json`
+   - CSS/SCSS 引用**包外运行时路径**（思源挂载路径，如 `../plugins/<pkg>/fonts/*.woff`）会被 vite 报「didn't resolve at build time」警告并原样保留——预期行为，不要改成包内相对路径
 3. `package.json` 精简：scripts 为 `lint`（oxlint）/ `dev` / `build` / `clean`，删除 `release*`；devDeps 只留构建所需并升级到 monorepo 现行版本（模板自带 vite 6、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig 一律不要），`vue` 移到 devDeps，`siyuan` 统一 `1.3.0`；`rimraf`、`@types/*` 由根提供不再声明；不写 `author`、`description`、`devEngines`、`homepage`、`repository` 等发布用字段，`version` 由 pre-commit 的 `syncversion.ps1` 自动对齐
 4. 新建包内 `cliff.toml`：改 `tag_pattern`、`include_paths`、`output`（`whatschange.md`）、`<REPO>`，标题用 `split(pat="@") | last`（详见 [release.md](./release.md#changelog-配置)）
 
@@ -64,10 +64,9 @@
 
 迁移路线按需选择：
 
-| 路线         | 做法                                                                                                                                      | 适用                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| 迁 vite      | 与现有 vite 包同构；kernel 产物用 `build.rollupOptions.input` 第二入口或 `--config` 第二个配置文件输出到不同目录                          | kernel 产物只是静态资源      |
-| 迁 esbuild   | 删掉 webpack 全家（webpack、webpack-cli、copy/zip/mini-css 插件、sass-loader、npm-run-all 共 10+ 依赖）；`build-plugin.ts` 需扩展为多入口 | 想统一到根构建脚本           |
-| 保留 webpack | 包内自洽（webpack、esbuild-loader、zip-webpack-plugin 留在包内），根只管聚合；`tsconfig` 仍继承 base                                      | 内核构建逻辑复杂、不值得重写 |
+| 路线         | 做法                                                                                                                 | 适用                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| 迁 vite      | 与现有包同构转发根工厂；kernel 产物用 `build.rollupOptions.input` 第二入口或 `--config` 第二个配置文件输出到不同目录 | kernel 产物只是静态资源      |
+| 保留 webpack | 包内自洽（webpack、esbuild-loader、zip-webpack-plugin 留在包内），根只管聚合；`tsconfig` 仍继承 base                 | 内核构建逻辑复杂、不值得重写 |
 
 无论哪条路线：`dprint` 换成 prettier（根已配置），`patches/` 的依赖补丁逐个确认是否仍必要；双入口的 `build` 编排（`run-p` / `run-s`）可用 `npm-run-all` 保留或改用 pnpm 的并行 script（`pnpm run --filter` / `&`）
