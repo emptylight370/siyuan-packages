@@ -43,7 +43,7 @@ cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 - **元数据**：配置阶段调 `resolvePluginMeta({ pkgDir })`（包目录级资产校验 + `TAG_VERSION` 一致性），自定义 rollup 插件 `emit-plugin-json` 在 `generateBundle` 把合成结果 emit 为 `plugin.json`
 - **语法目标**：`build.target` 由 **`tsconfck`**（Volar 系工具同款实现）解析包内 `tsconfig.json`（扁平化 `extends` 链、兼容 JSONC 注释）得出（当前基线 `ES2022`），与 tsconfig 单一来源、不漂移；tsconfck 装在根 `package.json`（scripts/ 从根 node_modules 解析）
 - **静态资源**：`viteStaticCopy` 负责 `README*.md`、`icon.png` / `preview.png`（按包根存在性过滤）、`src/i18n/**` → `i18n/`（`stripBase: 2`，目录不存在时跳过——字体包没有 i18n，viteStaticCopy 对空匹配 glob 会直接报错）、`publish.resources`（目录条目保留目录名整树复制，字体包的 `fonts/` 走这条路径）
-- **LICENSE banner**：生产构建由自定义插件 `license-banner` 给 **JS chunk** 前置 `/*! ... */` 块注释（裸文本注入会使产物成为非法 JS）；**CSS 产物不注入**。不能用 rollup 原生 `output.banner`——vite 8 底层 rolldown 未实现该选项（实测静默不生效）
+- **LICENSE banner**：生产构建经 rolldown 的 `postBanner` 输出选项给 **JS chunk** 前置 `/*! ... */` 块注释（裸文本注入会使产物成为非法 JS）；**CSS 产物不注入**。传统 `output.banner` 在 renderChunk 之前注入、会被压缩步骤剥掉（实测静默失效），`postBanner` 在压缩之后注入、保证存活；该选项依赖 vite 8 的 rolldown 内核（rolldown ≥ v1.0.0-beta.55，当前内置 1.2.19），vite 7 及以下的 rollup 内核没有它
 - **zip**：生产构建由 `vite-plugin-zip-pack` 把 `dist/` 扁平打成 `package.zip`（zip 根无顶层目录）
 - **external**：`siyuan`、`process` 不参与打包
 

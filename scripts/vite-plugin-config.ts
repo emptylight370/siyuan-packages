@@ -43,12 +43,6 @@ interface EmitFileArgs {
     source: string;
 }
 
-/** rollup bundle 产物条目的最小形状（仅需 chunk） */
-interface BundleEntry {
-    type: string;
-    code?: string;
-}
-
 // LICENSE 必须包成 /*! ... */ 块注释（与官方 plugin-sample 产物一致）：裸文本会让产物
 // 成为非法 JS（Node require 直接语法错误）；内容中的 */ 转义为 * / 防止注释提前闭合
 function asLegalComment(text: string) {
@@ -101,7 +95,8 @@ export function createPluginViteConfig({
 
         // LICENSE banner 仅生产构建注入，给 JS chunk 前置 /*! ... */ 块注释（与官方 plugin-sample
         // 产物一致）；CSS 产物不注入——思源加载 CSS 不需要许可证声明。
-        // 不能用 rollup 原生 output.banner：vite 8 底层 rolldown 未实现该选项（实测静默不生效）
+        // 用 rolldown 的 postBanner 选项：vite 8 不透传传统 output.banner（实测静默失效），
+        // rolldown 新增的 postBanner 可经 rollupOptions.output 正常透传（实测生效）
         let license: string | undefined;
         if (!isWatch) {
             try {
@@ -110,18 +105,6 @@ export function createPluginViteConfig({
                 throw new Error('包目录缺少 LICENSE，无法注入许可证声明', { cause: error });
             }
         }
-        const licenseBanner = {
-            name: 'license-banner',
-            enforce: 'post',
-            generateBundle(this: unknown, _options: unknown, bundle: Record<string, BundleEntry>) {
-                if (!license) return;
-                for (const file of Object.values(bundle)) {
-                    if (file.type === 'chunk' && typeof file.code === 'string') {
-                        file.code = `${license}${file.code}`;
-                    }
-                }
-            },
-        };
 
         console.log();
         console.log('isWatch=>', isWatch);
@@ -170,7 +153,6 @@ export function createPluginViteConfig({
                         })),
                     ],
                 }),
-                licenseBanner,
                 // dist 级复验（补回原 esbuild 路线的最后一道闸）：readme/icon/preview/publish.resources
                 // 必须都在 dist 中。closeBundle 在 rollupOptions.plugins 的 zipPack 之前执行，zip 前拦住
                 {
@@ -240,6 +222,9 @@ export function createPluginViteConfig({
 
                     output: {
                         entryFileNames: '[name].js',
+                        // rolldown 的 postBanner：vite 8 不透传传统 output.banner（实测静默失效），
+                        // postBanner 可正常透传，minify 之后统一添加
+                        ...(license ? { postBanner: license } : {}),
                         assetFileNames: (assetInfo: { names?: string[] }) => {
                             // 使用 names 数组替代已弃用的 name 属性
                             const names = assetInfo.names || [];
