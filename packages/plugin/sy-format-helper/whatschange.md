@@ -1,3 +1,18 @@
+## [0.8.0](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.3...sy-format-helper@0.8.0) (2026-11-17)
+
+### 🐛 Bug Fixes | 问题修复
+
+- 编辑器linter报错 ([ca4d855](https://github.com/emptylight370/siyuan-packages/commit/ca4d8559349c6901676427d747bd3a20f1fdea07))
+
+### 🔨 Refactor | 重构
+
+- 转移构建过程至vite插件 ([689fe41](https://github.com/emptylight370/siyuan-packages/commit/689fe4119c0cdc311731fd24f1dcaaf3d315889d))
+- 用插件方法直接读写块 ([44e8764](https://github.com/emptylight370/siyuan-packages/commit/44e8764168c52c0c1692ecb6a3b1044e83be613f))
+
+### 🛠️ Build system | 构建系统
+
+- 全量调整为vite构建 ([b01396e](https://github.com/emptylight370/siyuan-packages/commit/b01396e0dd8d505e3050294256e1ac2495e16e2d))
+
 ## [0.7.3](https://github.com/emptylight370/siyuan-packages/compare/sy-format-helper@0.7.2...sy-format-helper@0.7.3) (2026-11-15)
 
 ### ✨ Features | 功能

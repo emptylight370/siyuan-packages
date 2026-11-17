@@ -1,5 +1,5 @@
 {
-  "version": "0.7.3",
+  "version": "0.8.0",
   "minAppVersion": "3.7.0",
   "disabledInPublish": true,
   "frontends": ["desktop", "browser-desktop", "desktop-window"],
