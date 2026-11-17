@@ -17,15 +17,16 @@
 
 只读当前任务需要的文件：
 
-| 任务                                                   | 读                                                       |
-| ------------------------------------------------------ | -------------------------------------------------------- |
-| 写代码、过质量门禁                                     | [docs/agents/quality.md](docs/agents/quality.md)         |
-| 查插件 API 用法（生命周期/菜单/命令/Dock/内核等）      | [docs/plugin-sample.md](docs/plugin-sample.md)           |
-| 构建、调试、部署                                       | [docs/agents/build.md](docs/agents/build.md)             |
-| 改 `meta.json` / `bazaar.json`、集市规则、特性版本门槛 | [docs/agents/metadata.md](docs/agents/metadata.md)       |
-| 发版、changelog、CI 排查                               | [docs/agents/release.md](docs/agents/release.md)         |
-| 新增包                                                 | [docs/agents/new-package.md](docs/agents/new-package.md) |
-| 找目录/命名/lib/mise/ignore 约定                       | [docs/agents/project.md](docs/agents/project.md)         |
+| 任务                                                    | 读                                                               |
+| ------------------------------------------------------- | ---------------------------------------------------------------- |
+| 写代码、过质量门禁                                      | [docs/agents/quality.md](docs/agents/quality.md)                 |
+| 查插件 API 用法（生命周期/菜单/命令/Dock/内核等）       | [docs/plugin-sample.md](docs/plugin-sample.md)                   |
+| 查 vite-vue 集成与产物合规（Vue 挂载/vite.config 逐段） | [docs/plugin-sample-vite-vue.md](docs/plugin-sample-vite-vue.md) |
+| 构建、调试、部署                                        | [docs/agents/build.md](docs/agents/build.md)                     |
+| 改 `meta.json` / `bazaar.json`、集市规则、特性版本门槛  | [docs/agents/metadata.md](docs/agents/metadata.md)               |
+| 发版、changelog、CI 排查                                | [docs/agents/release.md](docs/agents/release.md)                 |
+| 新增包                                                  | [docs/agents/new-package.md](docs/agents/new-package.md)         |
+| 找目录/命名/lib/mise/ignore 约定                        | [docs/agents/project.md](docs/agents/project.md)                 |
 
 ## 常用命令
 
