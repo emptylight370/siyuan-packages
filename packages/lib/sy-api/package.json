@@ -2,6 +2,7 @@
   "name": "sy-api",
   "version": "0.0.1",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "description": "思源 API 封装（monorepo 内部 lib，源码级打进插件产物，不发布集市）",
   "main": "./src/index.ts",

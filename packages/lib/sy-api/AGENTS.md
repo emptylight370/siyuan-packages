@@ -5,6 +5,7 @@
 ## 定位与边界
 
 - 不发布集市，无 `meta.json` / `cliff.toml`；以 `workspace:*` 源码级打进插件产物（vite 消费链路验证）
+- 许可证 **MIT**（`LICENSE`，© 2024-2026 EmptyLight）；`package.json` 为 `private: true`，不发布 npm
 - **与框架无关**：仅依赖 `siyuan` SDK（`fetchSyncPost` / `Lute`）与浏览器 API，任何思源插件渲染进程可用；不适用于内核侧（kernel.js）
 - 不做独立 tsc 检查，类型由消费方工程覆盖
 

@@ -2,6 +2,7 @@
   "name": "sy-vite-component",
   "version": "0.0.1",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "description": "源自 vite-vue 模板 SiyuanTheme 的思源基础控件库（monorepo 内部 lib，源码级打进插件产物，不发布集市）",
   "main": "./src/index.ts",

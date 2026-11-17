@@ -2,6 +2,7 @@
   "name": "siyuan-packages",
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "description": "SiYuan plugin monorepo",
   "scripts": {

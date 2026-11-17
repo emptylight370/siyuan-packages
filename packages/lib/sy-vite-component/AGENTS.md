@@ -5,6 +5,7 @@
 ## 定位与边界
 
 - 不发布集市，无 `meta.json` / `cliff.toml`；以 `workspace:*` 源码级打进插件产物
+- 许可证 **MIT**（`LICENSE`，© 2026 EmptyLight）；`package.json` 为 `private: true`，不发布 npm
 - 控件依赖思源宿主的 `b3-*` / `fn__*` 样式类，本身零运行时依赖；**只在思源插件 UI 环境内可用**
 - SFC 由消费方的 `@vitejs/plugin-vue` 编译；本包不做独立 tsc（消费方经 `declare module '*.vue'` 将组件视为 any）
 - `devDependencies.vue` 的用途：让 pnpm 在本包 node_modules 链接 vue，供 SFC 编译产物 `import 'vue'` 的解析（组件源码只用编译宏，不 import vue）
