@@ -15,7 +15,6 @@
     "rimraf": "catalog:",
     "sass": "catalog:",
     "siyuan": "catalog:",
-    "sy-api": "workspace:*",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:",
     "vite-tsconfig-paths": "catalog:",

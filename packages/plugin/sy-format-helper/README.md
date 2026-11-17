@@ -65,12 +65,12 @@ Wait a minute to refresh the layout, if your change doesn't loaded, you should r
 > Complete [changelog](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/changelog.md)
 > Complete [commit history](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/whatschange.md)
 
+- v0.8.0
+  - Directly use plugin ability to get block and update block
 - v0.7.1
   - Fix issue that some inline items are not correctly convert
 - v0.7.0
   - Refactor plugin
-- v0.6.1
-  - Fix modify not persistent issue
 
 # Thanks
 

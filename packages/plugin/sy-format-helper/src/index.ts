@@ -1,10 +1,8 @@
 import { Plugin, showMessage, Menu } from 'siyuan';
 import './index.scss';
-import { IProtyle } from 'siyuan/types';
-import * as api from 'sy-api';
+import { IOperation, IProtyle } from 'siyuan/types';
 
 export default class FormatHelper extends Plugin {
-    private appId = this.app.appId;
     // 存储固定引用：bind 每次会生成新函数，off 必须传入与 on 相同的引用才能移除监听器
     private readonly onBlockIcon = this.addTextBlockItem.bind(this);
     // 防止重复点击：上一次批量处理未结束时忽略新的触发
@@ -44,23 +42,21 @@ export default class FormatHelper extends Plugin {
         // 判断选中块类型，目前只能快速分辨代码块
         if (Array.from(children).some((child) => (child as HTMLElement).classList.contains('hljs'))) {
             submenu.push({
+                id: 'syFormatHelper_codeBlockIndent',
                 icon: 'iconInfo',
                 label: this.i18n.codeBlockAdjIndex,
-                click: async () => {
+                click: () => {
                     showMessage(this.i18n.codeBlockOnlyFirst);
-                    const blockId = blockElements[0].getAttribute('data-node-id');
-                    if (!blockId) return;
-                    await this.handleCodeBlock(blockId, 'indent');
+                    this.handleCodeBlock(detail, 'indent');
                 },
             });
             submenu.push({
+                id: 'syFormatHelper_codeBlockRindent',
                 icon: 'iconInfo',
                 label: this.i18n.codeBlockRmIndex,
-                click: async () => {
+                click: () => {
                     showMessage(this.i18n.codeBlockOnlyFirst);
-                    const blockId = blockElements[0].getAttribute('data-node-id');
-                    if (!blockId) return;
-                    await this.handleCodeBlock(blockId, 'rindent');
+                    this.handleCodeBlock(detail, 'rindent');
                 },
             });
         } else {
@@ -78,6 +74,7 @@ export default class FormatHelper extends Plugin {
             ];
             textItems.forEach((item) => {
                 submenu.push({
+                    id: `syFormatHelper_text_${item.type}`,
                     icon: 'iconEdit',
                     label: item.label,
                     click: () => this.processTextBlocks(blockElements, protyle, item.type),
@@ -86,6 +83,7 @@ export default class FormatHelper extends Plugin {
         }
         if (submenu.length != 0) {
             menu.addItem({
+                id: 'syFormatHelper_menu',
                 icon: 'iconFormat',
                 label: this.i18n.title,
                 type: 'submenu',
@@ -96,84 +94,39 @@ export default class FormatHelper extends Plugin {
     // !SECTION 添加点击菜单====================<
 
     // SECTION 处理文本操作====================>
-    // NOTE - 批量处理选中文本块：重复点击防护、逐块容错、聚合提示
-    private async processTextBlocks(blockElements: HTMLElement[], protyle: IProtyle, type: string) {
+    // NOTE - 批量处理选中文本块：直接改写编辑器 DOM，单次 transaction 提交（官方 plugin-sample 模式）
+    private processTextBlocks(blockElements: HTMLElement[], protyle: IProtyle, type: string) {
         if (this.processing) {
             return;
         }
         this.processing = true;
         try {
-            let changedCount = 0;
-            let failedCount = 0;
-            for (const blockElement of blockElements) {
+            const doOperations: IOperation[] = [];
+            blockElements.forEach((blockElement) => {
                 const blockId = blockElement.getAttribute('data-node-id');
                 if (!blockId) {
-                    continue;
+                    return;
                 }
-                try {
-                    if (await this.handleTextBlock(blockId, protyle, type)) {
-                        changedCount++;
-                    }
-                } catch (error) {
-                    failedCount++;
-                    console.error(`format block ${blockId} failed:`, error);
+                if (!this.applyTextTransform(blockElement, type)) {
+                    return;
                 }
-            }
-            if (failedCount > 0) {
-                showMessage(this.i18n.noParaFound, undefined, 'error');
-            } else if (changedCount === 0) {
+                doOperations.push({
+                    id: blockId,
+                    data: blockElement.outerHTML,
+                    action: 'update',
+                });
+            });
+            if (doOperations.length === 0) {
                 showMessage(this.i18n.nothingChange);
-            } else if (type === 'law') {
+                return;
+            }
+            // 单次事务提交全部选中块：一次 undo 即可整体回滚
+            protyle.getInstance().transaction(doOperations);
+            if (type === 'law') {
                 showMessage(this.i18n.lawIncludeFullSpace);
             }
         } finally {
             this.processing = false;
-        }
-    }
-
-    // NOTE - 处理单个文本块，返回是否发生修改并提交
-    private async handleTextBlock(blockId: string, protyle: IProtyle, type: string): Promise<boolean> {
-        // 获取块（接口异常时 request 返回 null，必须先判空再取属性）
-        const dom: IResGetBlockDOM | null = await api.getDom(blockId);
-        if (!dom || !dom.dom) {
-            throw new Error(`getBlockDOM failed: ${blockId}`);
-        }
-        const originDom = dom.dom;
-        // 如果获取到的块id不对(看似不可能发生)
-        if (blockId !== dom.id) {
-            showMessage(this.i18n.idWrong, undefined, 'error');
-            return false;
-        }
-        // 仅解析一次内核 HTML，后续直接操作文档树，避免字符串的多次序列化/解析往返
-        const doc = new DOMParser().parseFromString(originDom, 'text/html');
-        if (!this.applyTextTransform(doc, type)) {
-            return false;
-        }
-        const newBlockElement = doc.body.firstElementChild;
-        if (!newBlockElement) {
-            return false;
-        }
-        const newElement = document.importNode(newBlockElement, true) as HTMLElement;
-        this.commitUpdatedBlock(protyle, blockId, newElement, originDom);
-        return true;
-    }
-
-    // NOTE - 将修改后的块元素替换进编辑器真实 DOM，并提交事务
-    private commitUpdatedBlock(protyle: IProtyle, blockId: string, newElement: HTMLElement, oldHTML: string) {
-        const oldElement = protyle.wysiwyg?.element.querySelector(`[data-node-id="${blockId}"]`);
-        if (!oldElement) {
-            showMessage(this.i18n.noParaFound, undefined, 'error');
-            return;
-        }
-        oldElement.replaceWith(newElement);
-        // updateTransactionElement 定义在 Protyle 类实例上，而非内部 IProtyle 对象上，
-        // 必须通过 getInstance() 获取类实例后调用，否则事务不会被提交
-        try {
-            protyle.getInstance().updateTransactionElement(newElement, oldHTML);
-        } catch (error) {
-            // 提交失败时 DOM 已被替换，提示用户刷新核对，避免误以为已保存
-            console.error('submit transaction failed:', error);
-            showMessage(this.i18n.transactionFailed, undefined, 'error');
         }
     }
 
@@ -263,21 +216,23 @@ export default class FormatHelper extends Plugin {
         return false;
     }
 
-    // NOTE - 对解析后的块 DOM 应用文本变换，返回是否实际发生修改
-    private applyTextTransform(doc: Document, type: string): boolean {
+    // NOTE - 对编辑器中的块元素应用文本变换，返回是否实际发生修改
+    private applyTextTransform(blockElement: HTMLElement, type: string): boolean {
         const mapper = this.textMappers[type];
         if (!mapper) {
             return false;
         }
-        const blockElements = doc.querySelectorAll('[data-node-id]');
-        if (blockElements.length === 0) {
-            console.warn('No block elements found.');
-            showMessage(this.i18n.noTextFound, undefined, 'error');
+        // querySelectorAll 不含元素自身：块根自身即带 data-node-id，需先纳入；
+        // 嵌套子块（引用块/超级块等）一并处理
+        const innerBlocks: Element[] = blockElement.matches('[data-node-id]')
+            ? [blockElement, ...Array.from(blockElement.querySelectorAll('[data-node-id]'))]
+            : Array.from(blockElement.querySelectorAll('[data-node-id]'));
+        if (innerBlocks.length === 0) {
             return false;
         }
         let changed = false;
-        blockElements.forEach((blockElement) => {
-            const editable = blockElement.querySelector('div[contenteditable=true]');
+        innerBlocks.forEach((block) => {
+            const editable = block.querySelector('div[contenteditable=true]');
             if (!editable) {
                 return;
             }
@@ -301,67 +256,43 @@ export default class FormatHelper extends Plugin {
     // !SECTION 处理文本操作====================<
 
     // SECTION 处理代码块操作====================>
-    // NOTE - 处理代码块菜单点击事件
-    private async handleCodeBlock(blockId: string, type: string) {
-        // 获取块
-        const dom: IResGetBlockDOM = await api.getDom(blockId);
-        const id = dom.id;
-        // console.log(dom);
-        // 如果未获取到块
-        if (dom == null || dom == undefined) {
-            showMessage(this.i18n.noParaFound, undefined, 'error');
-            return;
-        }
-        // 如果获取到的块id不对(看似不可能发生)
-        if (blockId != id) {
-            showMessage(this.i18n.idWrong, undefined, 'error');
-            return;
-        }
-        let newDom: { dom: string; id: string } | null;
-        /* eslint-disable no-useless-assignment -- 代码块操作暂时抑制，结果在下方被丢弃 */
-        if (type == 'indent') {
-            newDom = this.codeBlockDecline(dom);
-            newDom = this.codeBlockRise(newDom);
-        } else if (type == 'rindent') {
-            newDom = this.codeBlockDecline(dom);
-        }
-        /* eslint-enable no-useless-assignment */
-        // 暂时抑制代码块操作
-        newDom = null as { dom: string; id: string } | null;
-        if (newDom == null || newDom == undefined || newDom === dom) {
+    // NOTE - 代码块操作：实现已迁移到 eventBus detail（与文本块一致），但功能保持抑制——
+    // 改写结果被丢弃、不提交事务，点击仅提示无变化。恢复产品决策后，将改写后的
+    // doc.body.firstElementChild.outerHTML 以 transaction 提交即可（见 processTextBlocks）
+    private handleCodeBlock(detail: any, type: string) {
+        const blockElement = detail.blockElements[0] as HTMLElement | undefined;
+        if (!blockElement) {
             showMessage(this.i18n.nothingChange);
-        } else {
-            await api.updateBlockTransactions(blockId, this.appId, dom.dom, newDom.dom);
+            return;
         }
+        // 在块的副本上改写，不动编辑器真实 DOM（抑制状态下不能造成未提交的 DOM 变更）
+        const doc = new DOMParser().parseFromString(blockElement.outerHTML, 'text/html');
+        if (type === 'indent') {
+            this.codeBlockDecline(doc);
+            this.codeBlockRise(doc);
+        } else {
+            this.codeBlockDecline(doc);
+        }
+        // 保持抑制：不提交事务
+        showMessage(this.i18n.nothingChange);
     }
 
     // NOTE - 移除代码块缩进
-    private codeBlockDecline(dom: { dom: string; id: string }) {
-        console.log(dom);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(dom.dom, 'text/html');
+    private codeBlockDecline(doc: Document) {
         const hljs = doc.querySelector('div.hljs');
-        if (!hljs) return dom;
+        if (!hljs) return;
         const editable = hljs.querySelector('[contenteditable=true]');
-        if (!editable) return dom;
-        const innerHTML = editable.innerHTML.replace(/^[ \t]+/gm, '');
-        editable.innerHTML = innerHTML;
-        dom.dom = doc.body.innerHTML;
-        console.log(dom);
-        return dom;
+        if (!editable) return;
+        editable.innerHTML = editable.innerHTML.replace(/^[ \t]+/gm, '');
     }
 
     // NOTE - 添加代码块缩进
-    private codeBlockRise(dom: { dom: string; id: string }) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(dom.dom, 'text/html');
+    private codeBlockRise(doc: Document) {
         const hljs = doc.querySelector('div.hljs');
-        if (!hljs) return dom;
+        if (!hljs) return;
         const editable = hljs.querySelector('[contenteditable=true]');
-        if (!editable) return dom;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 缩进逻辑待实现
-        const innerHTML = editable.innerHTML;
-        return dom;
+        if (!editable) return;
+        // 缩进逻辑待实现
     }
     // !SECTION 处理代码块操作====================<
 }

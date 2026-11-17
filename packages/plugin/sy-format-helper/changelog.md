@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.0
+
+- 直接使用插件能力获取块与更新块
+- Directly use plugin ability to get block and update block
+
 ## v0.7.1
 
 - 修复部分行内元素错误处理问题

@@ -27,26 +27,23 @@
 
 ### 模块结构
 
-| 路径                                      | 职责                                                                                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `src/index.ts`                            | `FormatHelper` 主体，菜单注入与批量处理入口                                                                              |
-| `sy-api`（lib）                           | 思源 API 封装（`getDom`、`updateBlockTransactions`、Lute 转换等），共享 lib：`packages/lib/sy-api`，workspace 源码级依赖 |
-| `src/index.scss`                          | 样式源码，经 sass 编译为 `dist/index.css`                                                                                |
-| `changelog.md`                            | **手写**历史 changelog（v0.7.1 及更早的人工整理记录），与 whatschange 体系并行，勿删除或重命名                           |
-| `src/env.d.ts`                            | `*.scss` 模块声明                                                                                                        |
-| `src/i18n/en.json`、`src/i18n/zh-CN.json` | 语言文件，**横线**命名（另两个 vite 包用 `en_US.json` / `zh_CN.json`）                                                   |
+| 路径                                      | 职责                                                                                           |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/index.ts`                            | `FormatHelper` 主体，菜单注入与批量处理入口                                                    |
+| `src/index.scss`                          | 样式源码，经 sass 编译为 `dist/index.css`                                                      |
+| `changelog.md`                            | **手写**历史 changelog（v0.7.1 及更早的人工整理记录），与 whatschange 体系并行，勿删除或重命名 |
+| `src/env.d.ts`                            | `*.scss` 模块声明                                                                              |
+| `src/i18n/en.json`、`src/i18n/zh-CN.json` | 语言文件，**横线**命名（另两个 vite 包用 `en_US.json` / `zh_CN.json`）                         |
 
 `src/index.ts` 内部结构：
 
-| 成员                                                        | 作用                                       |
-| ----------------------------------------------------------- | ------------------------------------------ |
-| `processTextBlocks(blockElements, protyle, type)`           | 批量处理入口                               |
-| `handleTextBlock(blockId, protyle, type)`                   | 处理单个块，返回是否产生改动               |
-| `commitUpdatedBlock(protyle, blockId, newElement, oldHTML)` | 把改动写回块内容                           |
-| `textMappers`                                               | 按 `type` 取对应文本变换函数的映射表       |
-| `skippedInlineTypes` / `isInSkippedInline`                  | 跳过不该被改写的行内元素类型               |
-| `applyTextTransform(doc, type)`                             | 在 DOM 上应用变换                          |
-| `handleCodeBlock` / `codeBlockDecline` / `codeBlockRise`    | 代码块缩进与反缩进，**当前被抑制**（见下） |
+| 成员                                                     | 作用                                                                                                                                                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `processTextBlocks(blockElements, protyle, type)`        | 批量处理入口：直接改写编辑器 DOM（eventBus 回调现成的 `detail.blockElements`，**不经 API 取块**），单次 `transaction` 提交全部选中块（官方 plugin-sample `removeSpace` 模式，一次 undo 整体回滚） |
+| `textMappers`                                            | 按 `type` 取对应文本变换函数的映射表                                                                                                                                                              |
+| `skippedInlineTypes` / `isInSkippedInline`               | 跳过不该被改写的行内元素类型                                                                                                                                                                      |
+| `applyTextTransform(blockElement, type)`                 | 在编辑器块元素（含嵌套子块）上应用变换，返回是否实际修改                                                                                                                                          |
+| `handleCodeBlock` / `codeBlockDecline` / `codeBlockRise` | 代码块缩进与反缩进：已迁移到 eventBus `detail`（在块副本上改写，不经 API），**功能保持抑制**——改写结果被丢弃、不提交事务（见下）                                                                  |
 
 ### 构建要点
 
@@ -60,4 +57,5 @@
 1. 菜单文案统一走 `this.i18n.*`
 2. `private processing` 防重复点击：上一次批量处理未结束时忽略新的触发
 3. `onBlockIcon` 保存 `bind` 后的引用，`off` 必须传入同一引用才能移除监听
-4. 代码块操作目前处于抑制状态（`newDom` 被置空后直接提示「无变化」），恢复前先确认产品决策
+4. 代码块操作保持抑制：点击仅提示「无变化」，改写在块副本上完成后即丢弃；恢复产品决策时改为 `transaction` 提交改写后的 `doc.body.firstElementChild.outerHTML`（参照 `processTextBlocks`）
+5. 本包不再依赖 `sy-api` lib（文本与代码块流程均已迁移到编辑器 DOM + 事务提交）

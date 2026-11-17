@@ -65,12 +65,12 @@
 > 完整[更新日志](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/changelog.md)
 > 完整[提交记录](https://github.com/emptylight370/siyuan-packages/blob/main/packages/plugin/sy-format-helper/whatschange.md)
 
+- v0.8.0
+  - 直接使用插件能力获取块与更新块
 - v0.7.1
   - 修复部分行内元素错误处理问题
 - v0.7.0
   - 重构插件
-- v0.6.1
-  - 修复修改没有持久化问题
 
 # 感谢
 

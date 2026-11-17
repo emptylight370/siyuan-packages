@@ -240,9 +240,6 @@ importers:
       siyuan:
         specifier: 'catalog:'
         version: 1.3.0
-      sy-api:
-        specifier: workspace:*
-        version: link:../../lib/sy-api
       vite:
         specifier: 'catalog:'
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.108.2)(yaml@2.9.1)
