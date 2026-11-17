@@ -10,7 +10,7 @@ pnpm --filter ./packages/plugin/sy-format-helper build    # 根目录，按目�
 cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 ```
 
-全部包统一走 **vite** 构建：包内 `vite.config.ts` 转发到 `scripts/vite-plugin-config.ts` 的 `createPluginViteConfig()`（公共编排，包内只传 `import.meta.dirname` 与 `deps`——scripts/ 解析不到包内 devDependencies，vite 辅助与插件实例必须由包内传入；有 `.vue` 源码的包额外传 `vue`）。元数据合成统一由 `scripts/plugin-meta.ts` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件。`@` 等路径别名由 `vite-tsconfig-paths` 从包内 `tsconfig.json` 的 `paths` 读取（单一来源）——**包内 tsconfig 必须声明源码用到的别名**：
+全部包统一走 **vite** 构建：包内 `vite.config.ts` 转发到 `scripts/vite-plugin-config.ts` 的 `createPluginViteConfig()`（公共编排，包内只传 `import.meta.dirname` 与 `deps`——scripts/ 解析不到包内 devDependencies，vite 辅助与插件实例必须由包内传入；对工厂的 import **必须带 `.ts` 扩展名**：`configLoader: 'native'`（计划中的默认值）由 Node 原生运行时直接执行配置文件，不做扩展名推断）。元数据合成统一由 `scripts/plugin-meta.ts` 的 `resolvePluginMeta()` 提供，`plugin.json` 一律是产物而非源文件。`@` 等路径别名由 vite 原生 `resolve.tsconfigPaths` 从**逐文件就近发现**的 `tsconfig.json` 的 `paths` 读取（单一来源）——**包内 tsconfig 必须声明源码用到的别名，且把 `"vite.config.ts"` 加入 `include`**：
 
 | 模式              | 命令                             | 产物                                               |
 | ----------------- | -------------------------------- | -------------------------------------------------- |
@@ -49,7 +49,7 @@ cd packages/plugin/sy-format-helper && pnpm build         # 包目录内
 
 CSS 中引用**思源插件挂载路径**的 `url()`（如 `loadPetals` 注入样式里 `../plugins/<pkg>/fonts/*.woff` 的字体）vite 无法在构建期解析，构建输出「didn't resolve at build time, will remain unchanged to be resolved at runtime」警告并原样保留 URL——这是预期行为，不是错误。
 
-构建依赖（`vite`、`vite-plugin-static-copy`、`vite-plugin-zip-pack`、`vite-tsconfig-paths`、`fast-glob`、`minimist`、`sass`）由**各包自己声明**（catalog 统一版本）；`tsconfck` 是例外——它被根 `scripts/vite-plugin-config.ts` 直接 import，装在根 `package.json`。
+构建依赖（`vite`、`vite-plugin-static-copy`、`vite-plugin-zip-pack`、`fast-glob`、`minimist`、`sass`）由**各包自己声明**（catalog 统一版本）；`tsconfck` 是例外——它被根 `scripts/vite-plugin-config.ts` 直接 import，装在根 `package.json`。
 
 ## 补充文件进 package.zip
 

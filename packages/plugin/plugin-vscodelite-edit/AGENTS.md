@@ -50,7 +50,7 @@
 
 - `package.json` 的 `build` / `dev` 都是 `vite build`（watch 加 `--watch`），构建编排全部在根 `scripts/vite-plugin-config.ts` 工厂；watch 与 production 一律构建到包内 `dist/`
 - 工厂负责静态资源复制（`README*.md`、`icon.png`、`preview.png`、`src/i18n/**` 摊平到 `dist/i18n/`）、元数据合成、生产构建注入 LICENSE banner 并由 `vite-plugin-zip-pack` 打包 `dist/` 为 `package.zip`
-- `@` 别名由 `vite-tsconfig-paths` 从包内 `tsconfig.json` 的 `paths` 读取
+- `@` 别名由 vite 原生 `resolve.tsconfigPaths` 从包内 `tsconfig.json` 的 `paths` 读取
 - 产物含 `dist/index.css`（与 `siyuan-ignoreeditor` 不同，后者样式内联）
 - `siyuan` 依赖为 `catalog`（与另两个包一致）
 

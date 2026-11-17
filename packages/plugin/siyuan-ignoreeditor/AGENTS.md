@@ -51,7 +51,7 @@
 - 工厂负责静态资源复制：readme 文件从 `meta.readme` 生成、`icon.png`（icon/preview 按存在与否过滤，本包无 `preview.png`）、`src/i18n/**`（`stripBase: 2` 摊平到 `dist/i18n/`）
 - 生产构建由 `vite-plugin-zip-pack` 打包 `dist/` 为 `package.zip`
 - 样式以内联进 `index.js` 为主；但 `SettingPage.vue` 的 scoped 样式块非空时，vite 会额外产出 `dist/index.css`（当前约 0.09 kB，思源会自动加载插件目录下的 `index.css`），不要再假设 `dist/` 里没有该文件
-- `@` 别名由 `vite-tsconfig-paths` 从包内 `tsconfig.json` 的 `paths` 读取；`siyuan` 依赖走 catalog（与另两个包一致）
+- `@` 别名由 vite 原生 `resolve.tsconfigPaths` 从包内 `tsconfig.json` 的 `paths` 读取；`siyuan` 依赖走 catalog（与另两个包一致）
 
 ### 关键约定
 

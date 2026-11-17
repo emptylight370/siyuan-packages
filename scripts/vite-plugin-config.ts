@@ -24,7 +24,6 @@ export interface CreatePluginViteConfigDeps {
     defineConfig(config: unknown): unknown;
     fg(patterns: string[]): Promise<string[]>;
     minimist(argv: string[]): Record<string, unknown>;
-    tsconfigPaths(options?: unknown): unknown;
     viteStaticCopy(options: unknown): unknown;
     zipPack(options: unknown): unknown;
 }
@@ -76,7 +75,7 @@ export function createPluginViteConfig({
     deps,
     watchFiles = DEFAULT_WATCH_FILES,
 }: CreatePluginViteConfigOptions): unknown {
-    const { defineConfig, vue, fg, minimist, tsconfigPaths, viteStaticCopy, zipPack } = deps;
+    const { defineConfig, vue, fg, minimist, viteStaticCopy, zipPack } = deps;
     let pluginInfo: PluginMeta | undefined;
 
     const emitPluginJson = {
@@ -119,10 +118,14 @@ export function createPluginViteConfig({
         console.log('distDir=>', './dist');
 
         return {
+            resolve: {
+                // vite 8 原生 tsconfig paths 解析（替代 vite-tsconfig-paths 插件）：'@' 等别名
+                // 由逐文件就近发现的 tsconfig.json 的 paths 提供，包内 tsconfig 必须声明所用别名。
+                // paths 仅作用于被 include 匹配的文件（在 CSS/SCSS 里用别名时需显式补充 include）
+                tsconfigPaths: true,
+            },
+
             plugins: [
-                // '@' 等别名由 vite-tsconfig-paths 从包内 tsconfig.json 的 paths 读取（单一来源）；
-                // 包内 tsconfig 必须声明所用别名
-                tsconfigPaths(),
                 ...(vue ? [vue()] : []),
                 // icon/preview 为可选资源，按包内是否存在过滤；publish.resources（如字体包的 fonts/）
                 // 为 meta.json 声明的额外发布资源，目录条目保留目录名整树复制

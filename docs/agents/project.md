@@ -10,7 +10,7 @@
 
 - **mise** 管运行时与 CLI：`node`、`pnpm`、`prettier`、`git-cliff`、`lefthook`。根 `mise.toml` 用 monorepo 模式（`monorepo_root = true`、`config_roots = ["packages/plugin/*", "packages/lib/*"]`），各包的 pnpm scripts 与 `.mise/tasks/` 因此都出现在根目录的 `mise tasks --all` 里；node 脚本导入由根 `mise.toml` 的 `[settings] task.auto_infer = ["node"]` 启用。该特性在 mise 文档中标注为 experimental，但实测（当前版本）`experimental = false` 时导入照常工作、不报错，CI 的 mise-action 默认值下无需额外开关。
 - **根 `package.json`** 只放 lint 工具链（oxlint、typescript）、跨包 CLI（rimraf）、类型包（@types/\*）与构建脚本依赖（tsconfck——`scripts/vite-plugin-config.ts` 直接 import），脚本是 workspace 级聚合。
-- **包内 `package.json`** 只放构建链（vite、vite-plugin-static-copy、vite-plugin-zip-pack、vite-tsconfig-paths、fast-glob、minimist、sass、rimraf）与 `siyuan` 类型；有 `.vue` 源码的包加 `vue` + `@vitejs/plugin-vue`；`prettier` 不装（mise 提供，避免双版本漂移）。
+- **包内 `package.json`** 只放构建链（vite、vite-plugin-static-copy、vite-plugin-zip-pack、fast-glob、minimist、sass、rimraf）与 `siyuan` 类型；有 `.vue` 源码的包加 `vue` + `@vitejs/plugin-vue`；`prettier` 不装（mise 提供，避免双版本漂移）。
 - 包内**不要**放 `lefthook.yml`、`.prettierrc`、`.gitignore`、`.oxlintrc.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml`——这些只认根级，子目录里的不生效。
 - 包内 `.mise/tasks/` 会被 mise 识别为任务（无需包内 `mise.toml`）；monorepo 模式下根目录也能看到子包任务，用 `mise run //packages/plugin/<pkg>:<task>` 调用（包目录内裸名 `mise run <task>` 与 `mise -C <pkgDir> run <task>` 均等价）。当前有 `changelog` 与 `release` 两个任务。
 

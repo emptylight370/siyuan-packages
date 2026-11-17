@@ -7,17 +7,15 @@
       "@/libs/*": ["./src/libs/*"]
     },
     "types": ["node", "vite/client"],
-    "allowImportingTsExtensions": true,
     "allowJs": true,
     "checkJs": true,
     /* Linting */
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "importHelpers": true,
-    "noEmit": true
+    "importHelpers": true
   },
-  "include": ["tools/**/*.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"],
+  "include": ["tools/**/*.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite.config.ts"],
   "exclude": ["node_modules", "src/abandon"],
   "root": "."
 }

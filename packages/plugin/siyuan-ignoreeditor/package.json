@@ -21,7 +21,6 @@
     "sy-vite-component": "workspace:*",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vite-plugin-zip-pack": "catalog:",
     "vue": "catalog:"
   },
