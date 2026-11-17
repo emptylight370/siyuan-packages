@@ -31,7 +31,7 @@ jobs:
           fetch-tags: true
 
       # mise 提供 node（类型剥离需 23.6+，须在运行 .ts 脚本前就绪）
-      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
 
       # 处理 tag，提取包名和版本
       - name: Parse tag
