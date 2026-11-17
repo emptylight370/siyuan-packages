@@ -37,12 +37,12 @@
 
 ## 官方模板新建的差异步骤
 
-1. `git clone --depth=1 https://github.com/siyuan-note/plugin-sample-vite-vue packages/plugin/<newpkg>` 并删除其中的 `.git` 与 `.github/`
-2. 删除 `release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`.editorconfig`、`.env.example`（`VITE_SIYUAN_WORKSPACE_PATH` 直写工作空间的逻辑已移除）（monorepo 未使用）；保留 `asset/`
+1. `git clone --depth=1 https://github.com/siyuan-note/plugin-sample-vite-vue packages/plugin/<newpkg>` 并删除其中的 `.git`、`.github/` 与 `.vscode/`
+2. 删除 `release.js`、`eslint.config.mjs`、`CHANGELOG.md`、`.editorconfig`、`.env.example`（`VITE_SIYUAN_WORKSPACE_PATH` 直写工作空间的逻辑已移除）、`tsconfig.node.json`（见第 6 条）（monorepo 未使用）；保留 `asset/`
 3. 模板 `viteStaticCopy` 按 `plugin.json` 的 `icon` / `preview` 字段动态生成图片 targets——改造后改为从 `resolvePluginMeta` 返回的 `meta.icon` / `meta.preview` 派生
 4. 官方模板的 i18n 复制无 `stripBase`，必须补 `rename: { stripBase: 2 }`，否则产物出现 `dist/i18n/src/i18n/*.json` 嵌套（`siyuan-ignoreeditor` 与 `plugin-vscodelite-edit` 都踩过）
-5. 演示代码取舍：`src/components/SiyuanTheme/`（主题控件）、`src/types/`（思源类型）、`src/utils/`（挂载工具）通常保留；`App.vue` 的示例逻辑按新包功能重写
-6. 模板 `package.json` 无 `clean` / `lint` script，需补上；devDeps 需整体升级（模板 vite 6、@vitejs/plugin-vue 5、siyuan 1.1.0 均落后于 monorepo 现行版本）
+5. 演示代码取舍：`src/components/SiyuanTheme/`（主题控件）、`src/types/`（思源类型）、`src/utils/`（挂载工具）通常保留；`src/api.ts`（模板自带的思源 API 封装）通常**删除**——需要思源 API 时引入 `sy-api` lib（`plugin-vscodelite-edit` 实践：模板 api.ts 是死代码）；`App.vue` 的示例逻辑按新包功能重写
+6. 模板 `package.json` 无 `clean` / `lint` script，需补上；devDeps 需整体升级（模板 vite 6、@vitejs/plugin-vue 5、siyuan 1.1.0、eslint 9、@antfu/eslint-config 4、ts-node、glob、@vue/tsconfig、`rollup-plugin-livereload`（配 `.env` 直写工作空间，随该逻辑一并移除）均落后于 monorepo 现行版本或不再使用）；模板的 `tsconfig.node.json`（`composite: true` + 包根 `tsconfig.json` 的 `references`）**删除**——composite 工程要求显式列出全部导入文件，接入根工厂后 `vite.config.ts` 会触发 TS6307；`allowImportingTsExtensions` / `noEmit` 已由 `tsconfig.base.json` 提供
 7. 首次发布：`mise run tag` 生成 `<pkg>@0.0.1`，推送后触发 CI
 
 ## 官方最简示例的两条特殊路线
@@ -61,7 +61,9 @@
 
 ### plugin-sample（webpack 双入口）
 
-官方最简插件用 **webpack 5 双配置**（`webpack.config.js` 前端 + `webpack.kernel.config.js` 内核）：dev 时 `run-p` 并行监听两个配置，build 时 `run-s` 先 kernel 后 app 串行；转译用 `esbuild-loader`，格式化用 `dprint`（非 prettier），另有 `patches/`（pnpm patch）与 `tests/`（node --test）。
+官方最简插件（快照 v0.5.2）用 **webpack 5 双配置**（`webpack.config.js` 前端 + `webpack.kernel.config.js` 内核）：dev 时 `run-p` 并行监听两个配置，build 时 `run-s` 先 kernel 后 app 串行；转译用 `esbuild-loader`（前端 target es6、内核 esnext，内核经 `experiments.outputModule` 输出 ESM），格式化用 `dprint`（非 prettier），另有 `patches/`（pnpm patch siyuan 类型）、`tests/`（node --test）、`docs/superpowers/`（内核 demo 设计稿，迁移时删除）。**内核源码是 `src/kernel.ts`**（`kernel.js` 为编译产物）。
+
+⚠️ 该快照同时是**内核插件 API 的权威演示**：`plugin.json` 带 `kernels` 清单，`src/kernel.ts` 运行在内核 goja 引擎（`globalThis.siyuan`：lifecycle / rpc / agent / storage / client / server，见 `docs/plugin-sample.md` §13），前端经 `kernel.rpc.call / notify / batch` 与 `kernel-plugin-state-change` 事件对接。迁移**含内核**的包前必读；本仓库尚无内核构建支持（`kernels` 字段校验已就绪，构建/复制/部署待补）。
 
 迁移路线按需选择：
 
@@ -70,4 +72,4 @@
 | 迁 vite      | 与现有包同构转发根工厂；kernel 产物用 `build.rollupOptions.input` 第二入口或 `--config` 第二个配置文件输出到不同目录 | kernel 产物只是静态资源      |
 | 保留 webpack | 包内自洽（webpack、esbuild-loader、zip-webpack-plugin 留在包内），根只管聚合；`tsconfig` 仍继承 base                 | 内核构建逻辑复杂、不值得重写 |
 
-无论哪条路线：`dprint` 换成 prettier（根已配置），`patches/` 的依赖补丁逐个确认是否仍必要；双入口的 `build` 编排（`run-p` / `run-s`）可用 `npm-run-all` 保留或改用 pnpm 的并行 script（`pnpm run --filter` / `&`）
+无论哪条路线：`dprint` 换成 prettier（根已配置），`patches/` 的依赖补丁逐个确认是否仍必要（快照补的是 `Setting.openInWindow` 类型与 `IScrollAttr` 导出）；双入口的 `build` 编排（`run-p` / `run-s`）可用 `npm-run-all` 保留或改用 pnpm 的并行 script（`pnpm run --filter` / `&`）；模板 `package.json` 的 `engines` / `packageManager` / `main`（`.src/index.js`，笔误）不迁移
