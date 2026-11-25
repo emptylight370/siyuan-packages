@@ -2,6 +2,7 @@
 <template>
   <label v-if="label || $slots.label" class="b3-label b3-label--noborder">
     <slot name="label">{{ label }}</slot>
+    <slot v-if="desc || $slots.desc" name="desc">{{ desc }}</slot>
     <div class="fn__hr"></div>
     <textarea v-bind="textareaAttrs()" v-model="model"></textarea>
   </label>
@@ -11,12 +12,15 @@
 <script lang="ts" setup>
 const {
   label,
+  desc,
   placeholder,
   rows = 2,
   textareaName,
 } = defineProps<{
   /** 纯文本标题；需要混排富文本（如内嵌链接）时改用 #label 插槽 */
   label?: string;
+  /** 纯文本描述；需要混排富文本（如内嵌链接）时改用 #desc 插槽 */
+  desc?: string;
   placeholder?: string;
   rows?: number;
   textareaName?: string;
