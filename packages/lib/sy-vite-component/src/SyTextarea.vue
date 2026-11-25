@@ -1,12 +1,18 @@
 <!-- 思源属性面板textarea输入框：属性面板场景用 label 包裹，无 label 时渲染裸 textarea -->
 <template>
-  <label v-if="label || $slots.label" class="b3-label b3-label--noborder">
-    <slot name="label">{{ label }}</slot>
-    <slot v-if="desc || $slots.desc" name="desc">{{ desc }}</slot>
-    <div class="fn__hr"></div>
-    <textarea v-bind="textareaAttrs()" v-model="model"></textarea>
-  </label>
-  <textarea v-else v-bind="textareaAttrs()" v-model="model"></textarea>
+  <div class="container fn__block">
+    <label v-if="label || $slots.label">
+      <slot name="label">
+        <div class="config-name">{{ label }}</div>
+      </slot>
+      <slot v-if="desc || $slots.desc" name="desc">
+        <div class="b3-label__text">{{ desc }}</div>
+      </slot>
+      <div class="fn__hr"></div>
+      <textarea v-bind="textareaAttrs()" v-model="model"></textarea>
+    </label>
+    <textarea v-else v-bind="textareaAttrs()" v-model="model"></textarea>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -40,7 +46,7 @@ function textareaAttrs() {
 </script>
 
 <style lang="scss" scoped>
-label {
+.container {
   padding: 8px 16px;
 }
 </style>
