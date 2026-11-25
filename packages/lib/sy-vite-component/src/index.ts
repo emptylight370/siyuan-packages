@@ -2,8 +2,6 @@
 // .vue 文件由消费方的 @vitejs/plugin-vue 编译；vue devDependencies 仅为让
 // pnpm 在本包 node_modules 链接 vue，供编译产物 import 'vue' 的解析。
 // 新增控件：src/ 下新建 SyXxx.vue（见根 AGENTS.md「内部共享 lib」），在下方追加导出。
-export { default as SyAttributeInput } from './SyAttributeInput.vue';
-export { default as SyAttributeTextarea } from './SyAttributeTextarea.vue';
 export { default as SyButton } from './SyButton.vue';
 export { default as SyCheckbox } from './SyCheckbox.vue';
 export { default as SyIcon } from './SyIcon.vue';
