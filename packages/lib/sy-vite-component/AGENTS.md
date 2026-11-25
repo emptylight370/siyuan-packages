@@ -22,7 +22,7 @@
 
 1. **控件命名**：PascalCase、`Sy` 前缀（思源 SiYuan 缩写）
 2. **样式**：只用思源宿主的 `b3-*` / `fn__*` 类；组件私有的结构性布局才用 scoped style（参照 `SyIcon` 的 `.enIconContainer`），不引入主题
-3. **v-model**：遵循 `modelValue` / `update:modelValue` 惯例；事件类型断言沿用 `($event.target as HTMLInputElement)` 写法
+3. **v-model**：模型参数名视具体需求决定，不强制默认名——基础输入类控件（`SyInput` / `SyTextarea` 等）语义单一，用默认 `modelValue` / `update:modelValue`（用法 `v-model`）；容器/面板类控件（如 `SySettingPanel`）绑定的是显隐等非值语义，用具名模型（如 `defineModel<boolean>('show')`，用法 `v-model:show`）。事件类型断言沿用 `($event.target as HTMLInputElement)` 写法
 4. **props 类型仍建议写 `defineProps<{...}>` 泛型**：当前消费方不受检查（`*.vue` 声明为 any），引入 vue-tsc 后即自动生效
 
 ## 新增控件的步骤
