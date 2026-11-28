@@ -2,14 +2,19 @@
 
 <script setup lang="ts">
 import { usePlugin } from '@/main';
-import { createApp, onMounted, ref, watchEffect } from 'vue';
+import { createApp, onMounted } from 'vue';
 import SettingPage from './SettingPage.vue';
 
 const openSetting = () => {
   const div = document.createElement('div');
   div.classList.toggle('ignore-setting');
   div.id = 'plugin-ignore-editor-setting';
-  const setting = createApp(SettingPage);
+  const setting = createApp(SettingPage, {
+    onClose: () => {
+      setting.unmount();
+      div.remove();
+    },
+  });
   setting.mount(div);
   document.body.appendChild(div);
 };
@@ -20,7 +25,7 @@ const plugin = usePlugin();
 // add top bar button
 plugin.addTopBar({
   icon: 'iconFormat',
-  title: plugin.name,
+  title: plugin.i18n?.settingTitle,
   callback: () => {
     openSetting();
   },
