@@ -1,6 +1,6 @@
 <!-- 思源属性面板textarea输入框：属性面板场景用 label 包裹，无 label 时渲染裸 textarea -->
 <template>
-  <div class="container fn__block">
+  <div class="container">
     <label v-if="label || $slots.label">
       <slot name="label">
         <div class="config-name">{{ label }}</div>
@@ -35,9 +35,9 @@ const model = defineModel<string>({ default: '' });
 
 function textareaAttrs() {
   return {
-    style: 'resize: vertical',
+    style: 'resize: vertical; width: calc(100% - 8px)',
     spellcheck: false,
-    class: 'b3-text-field fn__block',
+    class: 'b3-text-field',
     placeholder,
     rows,
     'data-name': textareaName,
