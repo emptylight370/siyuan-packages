@@ -6,12 +6,13 @@
 
 ## 项目快照
 
-| 项       | 当前值                                                                                              |
-| -------- | --------------------------------------------------------------------------------------------------- |
-| 包组     | `packages/plugin/*`（发布包）、`packages/lib/*`（内部共享 lib，不发布）                             |
-| 包管理器 | pnpm（mise 管运行时与 CLI：node / pnpm / prettier / git-cliff / lefthook）                          |
-| 构建系统 | 全部包统一 vite：根 `scripts/vite-plugin-config.ts` 工厂 + 包内 `vite.config.ts` 转发，无 Turborepo |
-| 测试     | 无测试框架；质量门禁是 `pnpm lint`、`prettier -c .`、`pnpm check`、`pnpm -r build` 四者             |
+| 项       | 当前值                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| 包组     | `packages/plugin/*`（发布包）、`packages/lib/*`（内部共享 lib，不发布）                                  |
+| 模板存档 | `templates/`（plugin-vue 预适配模板；不进 workspace/mise/门禁，新建包路线见 docs/agents/new-package.md） |
+| 包管理器 | pnpm（mise 管运行时与 CLI：node / pnpm / prettier / git-cliff / lefthook）                               |
+| 构建系统 | 全部包统一 vite：根 `scripts/vite-plugin-config.ts` 工厂 + 包内 `vite.config.ts` 转发，无 Turborepo      |
+| 测试     | 无测试框架；质量门禁是 `pnpm lint`、`prettier -c .`、`pnpm check`、`pnpm -r build` 四者                  |
 
 ## Context Index
 

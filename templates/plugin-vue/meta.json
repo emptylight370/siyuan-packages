@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "minAppVersion": "3.4.1",
+  "displayName": {
+    "default": "Plugin Vue Template"
+  },
+  "description": {
+    "default": "TODO: plugin description",
+    "zh-CN": "TODO：插件描述"
+  },
+  "keywords": ["TODO"],
+  "icon": "icon.png",
+  "preview": "preview.png"
+}

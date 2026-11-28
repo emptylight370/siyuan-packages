@@ -1,0 +1,75 @@
+# git-cliff ~ configuration file
+# https://git-cliff.org/docs/configuration
+# 复制后需把 __PKG__ 替换为新包名（tag_pattern 与 include_paths 两处）
+
+[changelog]
+body = """
+{% if version %}\
+    {% if previous.version %}\
+        {% set current = version | split(pat="@") | last %}\
+        ## [{{ current }}](<REPO>/compare/{{ previous.version }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+    {% else %}\
+        {% set current = version | split(pat="@") | last %}\
+        ## [{{ current }}](<REPO>/compare/{{ commit_range.from }}...{{ version }}) ({{ timestamp | date(format="%Y-%m-%d") }})
+    {% endif %}\
+{% else %}\
+    ## [unreleased]
+{% endif %}\
+{% set breaking_commits = commits | filter(attribute="breaking", value=true) %}\
+{% if breaking_commits | length > 0 %}\
+    ### ⚠ BREAKING CHANGES
+    {% for commit in breaking_commits %}
+        - {{ commit.breaking_description }}
+    {% endfor %}\
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim }}
+    {% for commit in commits %}
+        - {% if commit.scope %}**({{ commit.scope }})** {% endif %}\
+            {{ commit.message }} \
+            ([{{ commit.id | truncate(length=7, end="") }}](<REPO>/commit/{{ commit.id }}))\
+    {% endfor %}
+{% endfor %}
+"""
+trim = true
+render_always = true
+postprocessors = [
+  { pattern = "<REPO>", replace = "https://github.com/emptylight370/siyuan-packages" },
+]
+output = "changelog.md"
+
+[git]
+# 只使用本包的 tag 作为版本锚点（版本号在模板中剥离包名前缀）
+tag_pattern = "^__PKG__@"
+# 只统计本包目录下的提交，避免其他包的提交混入（键名为复数，值为 glob 数组）
+include_paths = ["packages/plugin/__PKG__/**"]
+conventional_commits = true
+filter_unconventional = true
+require_conventional = false
+split_commits = false
+commit_preprocessors = [
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))" },
+]
+protect_breaking_commits = true
+commit_parsers = [
+  { message = "^feat", group = "<!-- 0 -->✨ Features | 功能" },
+  { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes | 问题修复" },
+  { message = "^doc", group = "<!-- 2 -->📄 Documentation | 文档" },
+  { message = "^perf", group = "<!-- 3 -->⚡ Performance | 性能优化" },
+  { message = "^revert", group = "<!-- 4 -->⏪ Reverts | 回退" },
+  { message = "^refactor", group = "<!-- 5 -->🔨 Refactor | 重构" },
+  { message = "^build", group = "<!-- 6 -->🛠️ Build system | 构建系统" },
+  { message = "^ci", group = "<!-- 6 -->🛠️ Build system | 构建系统" },
+  { message = "^style", skip = true },
+  { message = "^chore", skip = true },
+  { message = "^test", skip = true },
+  { message = "^wip", skip = true },
+]
+filter_commits = true
+fail_on_unmatched_commit = false
+link_parsers = []
+use_branch_tags = false
+topo_order = false
+topo_order_commits = true
+recurse_submodules = false
+sort_commits = "oldest"

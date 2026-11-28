@@ -1,0 +1,4 @@
+# changelog 逻辑唯一实现在根文件任务 //:changelog（.mise/tasks/changelog.ps1，dir={{cwd}}）；
+# 输出文件名用根缺省 changelog.md，无历史存档；本文件复制后无需修改
+[tasks.changelog]
+run = "mise run //:changelog"

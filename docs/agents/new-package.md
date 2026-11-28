@@ -35,6 +35,10 @@
 3. 把旧仓库的 `whatschange.md` 存为 `whatschange.old.md` 并迁移其中链接；历史 tag 在 cliff 中全部失效（subtree 保留的提交路径不匹配 `packages/**`，实测命中 0），**不要在已发布版本上运行 `changelog`**
 4. `README_zh_CN.md` 等旧命名重命名为 `README.zh-CN.md`
 
+## 从 templates 存档创建（官方 vite-vue 模板的推荐路线）
+
+`templates/plugin-vue/` 是预适配官方 vite-vue 模板的内部存档（不进 pnpm workspace 与 mise `config_roots`，不参与 lint/构建/元数据校验）。复制到 `packages/plugin/<pkg>/` 后按包内 `TEMPLATE.md` 的改名清单操作，可跳过下方「官方模板新建的差异步骤」的大部分机械改造；该路线不覆盖内核/webpack（`plugin-sample` 快照仍按原路线处理）。下方步骤保留用于回查各项改造的来由，以及官方模板更新后重新适配存档的参照。
+
 ## 官方模板新建的差异步骤
 
 1. `git clone --depth=1 https://github.com/siyuan-note/plugin-sample-vite-vue packages/plugin/<newpkg>` 并删除其中的 `.git`、`.github/` 与 `.vscode/`
